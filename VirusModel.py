@@ -2,7 +2,7 @@ from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
-from mesa.visualization.modules import CanvasGrid
+from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
@@ -52,7 +52,7 @@ class VirusAgent(Agent):
 
 
 def get_infection_rate(model):
-    return np.sum([agent.infected for agent in model.schedule.agents])
+    return int(np.sum([agent.infected for agent in model.schedule.agents]))
 
 
 class VirusModel(Model):
@@ -102,8 +102,11 @@ grid_heigh = 100
 num_agents = 200
 
 grid = CanvasGrid(agent_portrayal, grid_width, grid_heigh, 900, 900)
+chart = ChartModule([{"Label": "infected",
+                      "Color": "Black"}],
+                    data_collector_name='datacollector')
 server = ModularServer(VirusModel,
-                       [grid],
+                       [grid, chart],
                        "Virus Model",
                        {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_heigh})
 server.port = 8521
