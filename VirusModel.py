@@ -98,17 +98,17 @@ def agent_portrayal(agent):
 
 
 grid_width = 100
-grid_heigh = 100
-num_agents = 200
+grid_height = 100
+num_agents = 300
 
-grid = CanvasGrid(agent_portrayal, grid_width, grid_heigh, 900, 900)
+grid = CanvasGrid(agent_portrayal, grid_width, grid_height, 900, 900)
 chart = ChartModule([{"Label": "infected",
                       "Color": "Black"}],
                     data_collector_name='datacollector')
 server = ModularServer(VirusModel,
                        [grid, chart],
                        "Virus Model",
-                       {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_heigh})
+                       {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_height})
 server.port = 8521
 server.launch()
 
