@@ -40,8 +40,8 @@ class Seat:
         self.available = True
 
 
-class Room:
-    def __init__(self, room_id, x_min, y_min, x_max, y_max, entry_side):
+class LectureRoom:
+    def __init__(self, room_id, x_min, y_min, x_max, y_max, entry_side, entry_side_offset=2):
         """
         :param room_id: The unique ID of this room.
         :param x_min: The lower bound x-coordinate of this room (includes the wall!)
@@ -49,6 +49,7 @@ class Room:
         :param x_max: The upper bound x-coordinate of this room (includes the wall!)
         :param y_max: The upper bound y-coordinate of this room (includes the wall!)
         :param entry_side: On which side of the room to make the entry. This can be any one of the "Side" enum.
+        :param entry_side_offset: The number of squares to leave empty on the entry side (where the lecturer would stand).
         """
         self.room_id = room_id
         self.x_min = x_min
@@ -70,14 +71,14 @@ class Room:
             self.x_entry = x_min
             self.y_entry = y_min + math.floor((y_max - y_min) / 2)
 
-        x_min_seat_offset = 2 if self.entry_side == Side.WEST else 0
-        y_min_seat_offset = 2 if self.entry_side == Side.SOUTH else 0
-        x_max_seat_offset = 2 if self.entry_side == Side.EAST else 0
-        y_max_seat_offset = 2 if self.entry_side == Side.NORTH else 0
+        x_min_seat_offset = entry_side_offset if self.entry_side == Side.WEST else 0
+        y_min_seat_offset = entry_side_offset if self.entry_side == Side.SOUTH else 0
+        x_max_seat_offset = entry_side_offset if self.entry_side == Side.EAST else 0
+        y_max_seat_offset = entry_side_offset if self.entry_side == Side.NORTH else 0
 
-        self.x_min_seat = self.x_min + 2 + x_min_seat_offset
+        self.x_min_seat = self.x_min + 1 + x_min_seat_offset
         self.x_max_seat = self.x_max - 1 - x_max_seat_offset
-        self.y_min_seat = self.y_min + 2 + y_min_seat_offset
+        self.y_min_seat = self.y_min + 1 + y_min_seat_offset
         self.y_max_seat = self.y_max - 1 - y_max_seat_offset
 
         self.seats = []
@@ -133,7 +134,7 @@ class RoomGrid(MultiGrid):
         self.room_count = room_count
         self.room_size = room_size + 1  # Add 1 to account for the walls.
         self.room_row_size = math.ceil(math.sqrt(room_count))
-        self.rooms = np.empty((self.room_row_size, self.room_row_size), dtype=Room)
+        self.rooms = np.empty((self.room_row_size, self.room_row_size), dtype=LectureRoom)
         self.rows = np.empty(self.room_row_size, dtype=object)
         self.generate_rooms()
 
@@ -165,7 +166,7 @@ class RoomGrid(MultiGrid):
         y_min = y_coordinates[0]
         y_max = y_coordinates[1]
 
-        self.rooms[row][col] = Room(room_idx, x_min, y_min, x_max, y_max, entry_side)
+        self.rooms[row][col] = LectureRoom(room_idx, x_min, y_min, x_max, y_max, entry_side)
 
     def get_portrayal(self, x, y):
         if x == 0 or y == 0 or x == (self.width - 1) or y == (self.height - 1):
