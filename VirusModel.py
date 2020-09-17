@@ -7,6 +7,8 @@ from mesa.visualization.ModularVisualization import ModularServer
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import numpy as np
+from CanvasRoomGrid import *
+from RoomGrid import *
 
 BASE_INFECTION_CHANCE = 3
 SPREAD_CHANCE = 8
@@ -60,7 +62,7 @@ class VirusModel(Model):
     def __init__(self, num_agents, grid_width, grid_height):
         self.num_agents = num_agents
         self.schedule = RandomActivation(self)
-        self.grid = MultiGrid(grid_width, grid_height, True)
+        self.grid = RoomGrid(grid_width, grid_height, False)
         self.running = True
 
         # Create agents
@@ -101,7 +103,7 @@ grid_width = 100
 grid_height = 100
 num_agents = 300
 
-grid = CanvasGrid(agent_portrayal, grid_width, grid_height, 900, 900)
+grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
 chart = ChartModule([{"Label": "infected",
                       "Color": "Black"}],
                     data_collector_name='datacollector')
