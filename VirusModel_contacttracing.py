@@ -25,7 +25,6 @@ class VirusAgent(Agent):
         self.contact_infected = False        
         self.time_infected = 0
         self.time_contact_infected = 0
-        model.random.randrange(0, 4 *48 )
         
     def list_removing(self, detection_time = 4*8):
         if self.infected:
@@ -57,7 +56,7 @@ class VirusAgent(Agent):
             other_agent.infected = True
             
 ### contact tracing
-    def trace_contact(self, other_agent):
+    def trace_contact(self):
         if self.infected:
             for other_agent in self.model.grid.get_neighbors(pos = self.pos, radius = 1, moore = True):
                 other_agent.contact_infected = True
@@ -72,8 +71,11 @@ class VirusAgent(Agent):
         for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=3, moore=True):
             self.handle_contact(other_agent)
             
-        for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=3, moore=True):
-            self.handle_contact(other_agent)
+        #for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=3, moore=True):
+        #   self.handle_contact(other_agent)
+        self.trace_contact()
+            
+        
             
 ### contact tracing
         self.list_removing()
@@ -156,7 +158,7 @@ server = ModularServer(VirusModel,
                        [grid, chart],
                        "Virus Model",
                        {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_height})
-server.port = 8536
+server.port = 8538
 server.launch()
 
 
