@@ -37,6 +37,13 @@ class VirusAgent(Agent):
         return (delta_x * delta_x + delta_y * delta_y) < SPREAD_DISTANCE_SQ
 
     def handle_contact(self, other_agent):
+        if other_agent.infected:
+            return
+
+        # The virus can't go through walls, so don't do anything if there's a wall between this agent and the other one.
+        if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
+            return
+
         if self.model.random.randrange(0, 100) < SPREAD_CHANCE:
             other_agent.infected = True
 
