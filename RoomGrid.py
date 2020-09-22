@@ -69,15 +69,31 @@ class LectureRoom:
         if entry_side == Side.NORTH:
             self.x_entry = x_min + math.floor((x_max - x_min) / 2)
             self.y_entry = y_max
+            self.y_min_lecturer_area = y_max - (entry_side_offset + 1)
+            self.y_max_lecturer_area = y_max - 1
+            self.x_min_lecturer_area = x_min + 1
+            self.x_max_lecturer_area = x_max - 1
         elif entry_side == Side.EAST:
             self.x_entry = x_max
             self.y_entry = y_min + math.floor((y_max - y_min) / 2)
+            self.y_min_lecturer_area = y_min + 1
+            self.y_max_lecturer_area = y_max - 1
+            self.x_min_lecturer_area = x_max - 1
+            self.x_max_lecturer_area = x_max - (entry_side_offset + 1)
         elif entry_side == Side.SOUTH:
             self.x_entry = x_min + math.floor((x_max - x_min) / 2)
             self.y_entry = y_min
+            self.y_min_lecturer_area = y_min + 1
+            self.y_max_lecturer_area = y_min + (entry_side_offset + 1)
+            self.x_min_lecturer_area = x_min + 1
+            self.x_max_lecturer_area = x_max - 1
         elif entry_side == Side.WEST:
             self.x_entry = x_min
             self.y_entry = y_min + math.floor((y_max - y_min) / 2)
+            self.y_min_lecturer_area = y_min + 1
+            self.y_max_lecturer_area = y_max - 1
+            self.x_min_lecturer_area = x_min + (entry_side_offset + 1)
+            self.x_max_lecturer_area = x_min + 1
 
         x_min_seat_offset = entry_side_offset if self.entry_side == Side.WEST else 0
         y_min_seat_offset = entry_side_offset if self.entry_side == Side.SOUTH else 0
@@ -120,6 +136,10 @@ class LectureRoom:
             return False
         return x == self.x_min or x == self.x_max or y == self.y_min or y == self.y_max
 
+    def is_lecturer_area(self, x, y):
+        return self.x_min_lecturer_area <= x <= self.x_max_lecturer_area and \
+               self.y_min_lecturer_area <= y <= self.y_max_lecturer_area
+
     def is_seat(self, x, y):
         """
         Checks if the given position is a seat.
@@ -130,6 +150,16 @@ class LectureRoom:
         """
         return self.x_min_seat < x < self.x_max_seat and self.y_min_seat < y < self.y_max_seat
 
+    def is_entry(self, x, y):
+        """
+        Checks if the given position is the door to this room.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: True if the given position is the door to this room.
+        """
+        return x == self.x_entry and y == self.y_entry
+
     def is_available(self, x, y):
         """
         Checks if the given position is available. I.e. it's not a wall or a seat.
@@ -138,7 +168,7 @@ class LectureRoom:
         :param y: The y-coordinate.
         :return: True if the position is available.
         """
-        return not self.is_seat(x, y) and not self.is_wall(x, y)
+        return self.is_entry(x, y) or self.is_lecturer_area(x, y)
 
     def get_seat(self, x, y):
         """
