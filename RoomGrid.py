@@ -1,7 +1,10 @@
-from mesa.space import MultiGrid
-import math
+from typing import Iterator
+
+from mesa.space import MultiGrid, Coordinate
 from enum import Enum
 import numpy as np
+
+from Util import *
 
 
 def get_square():
@@ -23,6 +26,18 @@ def seat_portrayal():
 def wall_portrayal():
     portrayal = get_square()
     portrayal["Color"] = "grey"
+    return portrayal
+
+
+def error_portrayal():
+    portrayal = get_square()
+    portrayal["Color"] = "purple"
+    return portrayal
+
+
+def error_portrayal2():
+    portrayal = get_square()
+    portrayal["Color"] = "orange"
     return portrayal
 
 
@@ -61,15 +76,31 @@ class LectureRoom:
         if entry_side == Side.NORTH:
             self.x_entry = x_min + math.floor((x_max - x_min) / 2)
             self.y_entry = y_max
+            self.y_min_lecturer_area = y_max - (entry_side_offset + 1)
+            self.y_max_lecturer_area = y_max - 1
+            self.x_min_lecturer_area = x_min + 1
+            self.x_max_lecturer_area = x_max - 1
         elif entry_side == Side.EAST:
             self.x_entry = x_max
             self.y_entry = y_min + math.floor((y_max - y_min) / 2)
+            self.y_min_lecturer_area = y_min + 1
+            self.y_max_lecturer_area = y_max - 1
+            self.x_min_lecturer_area = x_max - 1
+            self.x_max_lecturer_area = x_max - (entry_side_offset + 1)
         elif entry_side == Side.SOUTH:
             self.x_entry = x_min + math.floor((x_max - x_min) / 2)
             self.y_entry = y_min
+            self.y_min_lecturer_area = y_min + 1
+            self.y_max_lecturer_area = y_min + (entry_side_offset + 1)
+            self.x_min_lecturer_area = x_min + 1
+            self.x_max_lecturer_area = x_max - 1
         elif entry_side == Side.WEST:
             self.x_entry = x_min
             self.y_entry = y_min + math.floor((y_max - y_min) / 2)
+            self.y_min_lecturer_area = y_min + 1
+            self.y_max_lecturer_area = y_max - 1
+            self.x_min_lecturer_area = x_min + (entry_side_offset + 1)
+            self.x_max_lecturer_area = x_min + 1
 
         x_min_seat_offset = entry_side_offset if self.entry_side == Side.WEST else 0
         y_min_seat_offset = entry_side_offset if self.entry_side == Side.SOUTH else 0
@@ -99,22 +130,75 @@ class LectureRoom:
                 self.seats.append(Seat(x, y))
 
     def is_wall(self, x, y):
+        """
+        Checks if the given position is a wall.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: True if the given position is a wall.
+        """
         if x == self.x_entry and y == self.y_entry:
             return False
         if x > self.x_max or x < self.x_min or y > self.y_max or y < self.y_min:
             return False
         return x == self.x_min or x == self.x_max or y == self.y_min or y == self.y_max
 
+    def is_lecturer_area(self, x, y):
+        return self.x_min_lecturer_area <= x <= self.x_max_lecturer_area and \
+               self.y_min_lecturer_area <= y <= self.y_max_lecturer_area
+
     def is_seat(self, x, y):
+        """
+        Checks if the given position is a seat.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: True if the given position is a seat.
+        """
         return self.x_min_seat < x < self.x_max_seat and self.y_min_seat < y < self.y_max_seat
 
+    def is_entry(self, x, y):
+        """
+        Checks if the given position is the door to this room.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: True if the given position is the door to this room.
+        """
+        return x == self.x_entry and y == self.y_entry
+
+    def is_available(self, x, y):
+        """
+        Checks if the given position is available. I.e. it's not a wall or a seat.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: True if the position is available.
+        """
+        return self.is_entry(x, y) or self.is_lecturer_area(x, y)
+
     def get_seat(self, x, y):
+        """
+        Gets the seat at the given position, if one such seat exists.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: The seat at the given position if it exists, otherwise None.
+        """
         for seat in self.seats:
             if seat.x == x and seat.y == y:
                 return seat
         return None
 
     def get_portrayal(self, x, y):
+        """
+        Gets the portrayal of the square at the given position. The portrayal determines how it's rendered.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: The portrayal at the given position if it's a special place (e.g. a wall or a seat).
+                 If the space is empty, this will return None.
+        """
         if self.is_wall(x, y):
             return wall_portrayal()
         if self.is_seat(x, y):
@@ -168,8 +252,46 @@ class RoomGrid(MultiGrid):
 
         self.rooms[row][col] = LectureRoom(room_idx, x_min, y_min, x_max, y_max, entry_side)
 
+    def is_edge(self, x, y):
+        return x == 0 or y == 0 or x == (self.width - 1) or y == (self.height - 1)
+
+    def is_wall(self, x, y):
+        """
+        Checks if there is a wall at the given position.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: True if there is a wall at the given position, otherwise False.
+        """
+        if self.is_edge(x, y):
+            return True
+
+        room = self.get_room(x, y)
+        if room is None:
+            return False
+        return room.is_wall(x, y)
+
+    def is_available(self, x, y, allowed_in_rooms=True):
+        """
+        Checks if the given position is available. I.e. it's not a wall or a seat.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :param allowed_in_rooms: Whether or not to consider rooms as available or not. When set to False, this method
+                                 will consider any position in any room to be unavailable.
+        :return: True if the position is available.
+        """
+        if self.is_edge(x, y):
+            return False
+
+        room = self.get_room(x, y)
+        if room is None:
+            return True
+
+        return allowed_in_rooms and room.is_available(x, y)
+
     def get_portrayal(self, x, y):
-        if x == 0 or y == 0 or x == (self.width - 1) or y == (self.height - 1):
+        if self.is_edge(x, y):
             return wall_portrayal()
 
         room = self.get_room(x, y)
@@ -196,3 +318,84 @@ class RoomGrid(MultiGrid):
             return None
 
         return self.rooms[row][col]
+
+    def is_path_obstructed(self, x_0, y_0, x_1, y_1):
+        """
+        Checks if the path between two positions is obstructed by any walls.
+        :param x_0: The x-coordinate of the first positions.
+        :param y_0: The y-coordinate of the first positions.
+        :param x_1: The x-coordinate of the second positions.
+        :param y_1: The y-coordinate of the second positions.
+        :return: True if there is a wall between the two given positions, otherwise False.
+        """
+        for coord in get_line_between_points(x_0, y_0, x_1, y_1):
+            if self.is_wall(coord[0], coord[1]):
+                return True
+        return False
+
+    def get_random_pos(self, random, allowed_in_rooms=False):
+        """
+        Gets a random available position on this grid. See #is_available for more information
+
+        :param random: The random object to use to get random values.
+        :param allowed_in_rooms: True to allow the selected positions to be inside rooms.
+        :return: A random available position on this grid.
+        """
+        pos_x = pos_y = 0
+        while not self.is_available(pos_x, pos_y, allowed_in_rooms):
+            pos_x = random.randrange(self.width)
+            pos_y = random.randrange(self.height)
+        return pos_x, pos_y
+
+    def iter_neighborhood(
+            self,
+            pos: Coordinate,
+            moore: bool,
+            include_center: bool = False,
+            radius: int = 1,
+    ) -> Iterator[Coordinate]:
+        """ Return an iterator over cell coordinates that are in the
+        neighborhood of a certain point.
+
+        Args:
+            pos: Coordinate tuple for the neighborhood to get.
+            moore: If True, return Moore neighborhood
+                        (including diagonals)
+                   If False, return Von Neumann neighborhood
+                        (exclude diagonals)
+            include_center: If True, return the (x, y) cell as well.
+                            Otherwise, return surrounding cells only.
+            radius: radius, in cells, of neighborhood to get.
+
+        Returns:
+            A list of coordinate tuples representing the neighborhood. For
+            example with radius 1, it will return list with number of elements
+            equals at most 9 (8) if Moore, 5 (4) if Von Neumann (if not
+            including the center).
+
+        """
+        x, y = pos
+        coordinates = set()  # type = Set[Coordinate]
+        for dy in range(-radius, radius + 1):
+            for dx in range(-radius, radius + 1):
+                if dx == 0 and dy == 0 and not include_center:
+                    continue
+                # Skip coordinates that are outside manhattan distance
+                if not moore and abs(dx) + abs(dy) > radius:
+                    continue
+                # Skip if not a torus and new coords out of bounds.
+                if not self.torus and (
+                        not (0 <= dx + x < self.width) or not (0 <= dy + y < self.height)
+                ):
+                    continue
+
+                px, py = self.torus_adj((x + dx, y + dy))
+
+                # Skip if new coords out of bounds or not available.
+                if self.out_of_bounds((px, py)) or not self.is_available(px, py):
+                    continue
+
+                coords = (px, py)
+                if coords not in coordinates:
+                    coordinates.add(coords)
+                    yield coords

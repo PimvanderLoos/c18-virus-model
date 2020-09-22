@@ -25,8 +25,10 @@ class VirusAgent(Agent):
         possible_steps = self.model.grid.get_neighborhood(
             self.pos,
             moore=True,
-            include_center=False)
+            include_center=False,
+            radius=1)
         new_position = self.random.choice(possible_steps)
+
         self.model.grid.move_agent(self, new_position)
 
     def within_distance(self, other_agent):
@@ -35,8 +37,12 @@ class VirusAgent(Agent):
         return (delta_x * delta_x + delta_y * delta_y) < SPREAD_DISTANCE_SQ
 
     def handle_contact(self, other_agent):
-        # if not self.within_distance(other_agent):
-        #     return
+        if other_agent.infected:
+            return
+
+        # The virus can't go through walls, so don't do anything if there's a wall between this agent and the other one.
+        if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
+            return
 
         if self.model.random.randrange(0, 100) < SPREAD_CHANCE:
             other_agent.infected = True
@@ -48,9 +54,6 @@ class VirusAgent(Agent):
 
         for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=3, moore=True):
             self.handle_contact(other_agent)
-
-        # for other_agent in self.model.grid.get_cell_list_contents([self.pos]):
-        #     self.handle_contact(other_agent)
 
 
 def get_infection_rate(model):
@@ -70,9 +73,8 @@ class VirusModel(Model):
             agent = VirusAgent(uid, self)
             self.schedule.add(agent)
 
-            # Add the agent to a random grid cell
-            pos_x = self.random.randrange(self.grid.width)
-            pos_y = self.random.randrange(self.grid.height)
+            # Add the agent to a 'random' grid cell
+            (pos_x, pos_y) = self.grid.get_random_pos(self.random)
             self.grid.place_agent(agent, (pos_x, pos_y))
 
         self.datacollector = DataCollector(
