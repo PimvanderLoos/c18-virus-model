@@ -105,8 +105,7 @@ class VirusModel(Model):
             self.schedule.add(agent)
 
             # Add the agent to a random grid cell
-            pos_x = self.random.randrange(self.grid.width)
-            pos_y = self.random.randrange(self.grid.height)
+            (pos_x, pos_y) = self.grid.get_random_pos(self.random)
             self.grid.place_agent(agent, (pos_x, pos_y))
 
         self.datacollector = DataCollector(
