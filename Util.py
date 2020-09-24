@@ -13,8 +13,6 @@ def get_line_between_points(x_0, y_0, x_1, y_1):
     :return: A list of coordinates that make up the line between the two points.
     """
 
-    print("Drawing line: [{} {}] -> [{} {}]".format(x_0, y_0, x_1, y_1))
-
     coordinates = set()
 
     dx = x_1 - x_0

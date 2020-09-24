@@ -127,7 +127,7 @@ class VirusModel(Model):
             
                 
         except:
-            print(str(removed_agents))
+            print(str(self.removed_agents))
 ###
 
 
