@@ -8,18 +8,39 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import numpy as np
 from CanvasRoomGrid import *
+from Virus import *
 from RoomGrid import *
 
 BASE_INFECTION_CHANCE = 3
+"""
+Describes the chance of an agent being infected at the start of the model
+"""
+
 SPREAD_CHANCE = 8
-SPREAD_DISTANCE_SQ = 1.5 * 1.5
+"""
+Describes the chance of the virus spreading to another agent. Applied every step.
+"""
+
+DAY_DURATION = 8 * 4
+"""
+The number of ticks that fit into a day. Remember that every tick is 15 minutes, so 8 * 4 ticks = 8 hours.
+"""
+
+NIGHT_DURATION = 24 * 4 - DAY_DURATION
+"""
+The number of ticks that fit into a 'night'.
+"""
 
 
 class VirusAgent(Agent):
     """ An agent with fixed initial wealth."""
+
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.infected = model.random.randrange(0, 100) < BASE_INFECTION_CHANCE
+
+        self.virus = Virus(self.model.random, BASE_INFECTION_CHANCE)
+        self.lock_down = False
+        self.last_disease_update = 0
 
     def move(self):
         possible_steps = self.model.grid.get_neighborhood(
@@ -31,25 +52,31 @@ class VirusAgent(Agent):
 
         self.model.grid.move_agent(self, new_position)
 
-    def within_distance(self, other_agent):
-        delta_x = self.pos[0] - other_agent.pos[0]
-        delta_y = self.pos[1] - other_agent.pos[1]
-        return (delta_x * delta_x + delta_y * delta_y) < SPREAD_DISTANCE_SQ
-
     def handle_contact(self, other_agent):
-        if other_agent.infected:
+        """
+        Attempts to spread the virus to another agent. This only has an effect if the other agent isn't already infected.
+
+        Make sure that this agent is even infectious before calling this method!
+        :param other_agent: The victim.
+        """
+        # We assume that there's only a single strain  of the disease, so you cannot get infected more than once.
+        if other_agent.virus.is_infected():
             return
 
         # The virus can't go through walls, so don't do anything if there's a wall between this agent and the other one.
         if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
             return
 
-        if self.model.random.randrange(0, 100) < SPREAD_CHANCE:
-            other_agent.infected = True
+        other_agent.virus.infect(SPREAD_CHANCE, self.model.day)
 
     def step(self):
+        # No zombies allowed
+        if self.virus.disease_state == DiseaseState.DECEASED:
+            return
+
         self.move()
-        if not self.infected:
+
+        if not self.virus.is_infectious():
             return
 
         for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=3, moore=True):
@@ -57,16 +84,32 @@ class VirusAgent(Agent):
 
 
 def get_infection_rate(model):
-    return int(np.sum([agent.infected for agent in model.schedule.agents]))
+    return int(np.sum([agent.virus.is_infected() for agent in model.schedule.agents]))
+
+
+def get_death_count(model):
+    return int(np.sum([agent.virus.disease_state == DiseaseState.DECEASED for agent in model.schedule.agents]))
 
 
 class VirusModel(Model):
     """A model with some number of agents."""
+
     def __init__(self, num_agents, grid_width, grid_height):
         self.num_agents = num_agents
         self.schedule = RandomActivation(self)
         self.grid = RoomGrid(grid_width, grid_height, False)
         self.running = True
+        self.day = 0
+        self.total_steps = 0
+        """
+        Describes the 'total' number of steps taken by the model so far, including the virtual 'night' steps.
+        """
+
+        self.virtual_steps = 0
+        """
+        Describes the number of 'virtual' steps taken by the model. These are the skipped steps that represent the
+        'night'.
+        """
 
         # Create agents
         for uid in range(self.num_agents):
@@ -78,26 +121,64 @@ class VirusModel(Model):
             self.grid.place_agent(agent, (pos_x, pos_y))
 
         self.datacollector = DataCollector(
-            model_reporters={"infected": get_infection_rate},
+            model_reporters={"infected": get_infection_rate, "deaths": get_death_count},
             agent_reporters={"Position": "pos"})
+
+    def next_day(self):
+        """
+        Handles the start of the next day
+        """
+        self.day = int(self.schedule.steps / DAY_DURATION)
+        for agent in self.schedule.agent_buffer(shuffled=False):
+            agent.virus.handle_disease_progression(self.day)
+
+        self.virtual_steps = self.day * NIGHT_DURATION
+        print("NEXT DAY: {}".format(self.day))
 
     def step(self):
         self.datacollector.collect(self)
+        if self.schedule.steps % DAY_DURATION == 0:
+            self.next_day()
+
         '''Advance the model by one step.'''
         self.schedule.step()
 
+        self.total_steps = self.schedule.steps + self.virtual_steps
+
 
 def agent_portrayal(agent):
+    if agent.lock_down or agent.virus.disease_state is DiseaseState.DECEASED:
+        return {}
+
     portrayal = {"Shape": "circle",
                  "Filled": "true",
                  "r": 0.5}
-    if agent.infected:
-        portrayal["Color"] = "red"
-        portrayal["Layer"] = 0
-    else:
-        portrayal["Color"] = "green"
+
+    # Useful site for picking colors: https://rgbcolorcode.com/
+    if agent.virus.disease_state is DiseaseState.HEALTHY:
+        portrayal["Color"] = "rgba(43,255,0,1)"  # Bright green
         portrayal["Layer"] = 1
         portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.INFECTED:
+        portrayal["Color"] = "rgba(0,0,255,1)"  # Blue
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.TESTABLE:
+        portrayal["Color"] = "rgba(255,0,212,1)"  # Bright purple
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.INFECTIOUS:
+        portrayal["Color"] = "rgba(255,0,0,1)"  # Red
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.SYMPTOMATIC:
+        portrayal["Color"] = "rgba(102,0,0,1)"  # Dark red
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.RECOVERED:
+        portrayal["Color"] = "rgba(8,323,222,1)"  # Bright turquoise
+        portrayal["Layer"] = 0
+
     return portrayal
 
 
@@ -107,7 +188,9 @@ num_agents = 300
 
 grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
 chart = ChartModule([{"Label": "infected",
-                      "Color": "Black"}],
+                      "Color": "Black"},
+                     {"Label": "deaths",
+                      "Color": "Red"}],
                     data_collector_name='datacollector')
 server = ModularServer(VirusModel,
                        [grid, chart],
@@ -115,60 +198,3 @@ server = ModularServer(VirusModel,
                        {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_height})
 server.port = 8521
 server.launch()
-
-
-# num_agents = 200
-# grid_width = 100
-# grid_height = 100
-# model_steps = 450
-#
-# # model = VirusModel(num_agents=num_agents, grid_width=grid_width, grid_height=grid_height)
-#
-# grid = CanvasGrid(agent_portrayal, grid_width, grid_height, grid_width * 2, grid_height * 2)
-# server = ModularServer(VirusModel,
-#                        [grid],
-#                        "Virus Model",
-#                        {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_height})
-# server.port = 8521
-# server.launch()
-# model = server.model_cls
-#
-# # for run in range(model_steps):
-# #     model.step()
-# #
-# # plt.plot(model.datacollector.get_model_vars_dataframe())
-# # plt.show()
-#
-# # agent_dataframe = model.datacollector.get_agent_vars_dataframe()
-# # agents_array = np.reshape(agent_dataframe.to_numpy(), (model_steps, num_agents))
-# #
-# # fig = plt.figure()
-# # ax = fig.gca()
-# # ax.set_xticks(range(grid_width))
-# # ax.set_yticks(range(grid_height))
-# # plt.grid()
-# # plt.axis('off')
-# #
-# # percentage_to_draw = 10
-# # # for agent_idx in range(10):
-# # for agent_idx in range(num_agents):
-# #     if model.random.randrange(0, 100) > percentage_to_draw:
-# #         continue
-# #     agent_color = (model.random.randrange(0, 255, 1) / 255.0,
-# #                    model.random.randrange(0, 255, 1) / 255.0,
-# #                    model.random.randrange(0, 255, 1) / 255.0)
-# #     for run in range(model_steps - 1):
-# #         pos = agents_array[run][agent_idx]
-# #         next_pos = agents_array[run + 1][agent_idx]
-# #
-# #         if abs(pos[0] - next_pos[0]) is (grid_width - 1) or abs(pos[1] - next_pos[1]) is (grid_height - 1):
-# #             continue
-# #
-# #         line = mlines.Line2D([pos[0], next_pos[0]], [pos[1], next_pos[1]], color=agent_color)
-# #         ax.add_line(line)
-# # plt.show()
-
-
-
-
-
