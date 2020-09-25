@@ -1,12 +1,8 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
-from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
-from mesa.visualization.modules import CanvasGrid, ChartModule
+from mesa.visualization.modules import ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
-import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
-import numpy as np
 from CanvasRoomGrid import *
 from Virus import *
 from RoomGrid import *
@@ -39,8 +35,24 @@ class VirusAgent(Agent):
         super().__init__(unique_id, model)
 
         self.virus = Virus(self.model.random, BASE_INFECTION_CHANCE)
-        self.lock_down = False
-        self.last_disease_update = 0
+        self.quarantine = False
+        """
+        Keeps track of whether this agent is under quarantine or not
+        """
+
+        self.quarantine_duration = 0
+        """
+        Keeps track of the remaining number of days this agent will be quarantined.
+        """
+
+    def enforce_quarantine(self, days):
+        """
+        Places this agent under quarantine.
+
+        :param days: The number of days this agent will be quarantined for.
+        """
+        self.quarantine = True
+        self.quarantine_duration = days
 
     def move(self):
         possible_steps = self.model.grid.get_neighborhood(
@@ -63,15 +75,32 @@ class VirusAgent(Agent):
         if other_agent.virus.is_infected():
             return
 
+        # You cannot infect people who aren't there.
+        if other_agent.quarantine:
+            return
+
         # The virus can't go through walls, so don't do anything if there's a wall between this agent and the other one.
         if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
             return
 
         other_agent.virus.infect(SPREAD_CHANCE, self.model.day)
 
+    def new_day(self, day):
+        """
+        Handles the start of a new day.
+
+        :param day: The number of the new day (assuming the models started at 0).
+        """
+        self.virus.handle_disease_progression(day)
+
+        if self.quarantine:
+            self.quarantine_duration -= 1
+            if self.quarantine_duration <= 0:
+                self.quarantine = False
+
     def step(self):
         # No zombies allowed
-        if self.virus.disease_state == DiseaseState.DECEASED:
+        if self.virus.disease_state == DiseaseState.DECEASED or self.quarantine:
             return
 
         self.move()
@@ -126,11 +155,11 @@ class VirusModel(Model):
 
     def next_day(self):
         """
-        Handles the start of the next day
+        Handles the start of a new day.
         """
         self.day = int(self.schedule.steps / DAY_DURATION)
         for agent in self.schedule.agent_buffer(shuffled=False):
-            agent.virus.handle_disease_progression(self.day)
+            agent.new_day(self.day)
 
         self.virtual_steps = self.day * NIGHT_DURATION
         print("NEXT DAY: {}".format(self.day))
@@ -147,7 +176,7 @@ class VirusModel(Model):
 
 
 def agent_portrayal(agent):
-    if agent.lock_down or agent.virus.disease_state is DiseaseState.DECEASED:
+    if agent.quarantine or agent.virus.disease_state is DiseaseState.DECEASED:
         return {}
 
     portrayal = {"Shape": "circle",

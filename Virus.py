@@ -38,12 +38,20 @@ The lethality of the virus, expressed as a percentage (0 - 100) of agents that w
 
 class Virus:
     def __init__(self, random, base_infection_chance):
+        """
+        Create a new Virus object for an agent. Note that this doesn't immediately mean that the agent is infected.
+        It only means that they can be infected.
+
+        :param random: The random instance to use for randomization.
+        :param base_infection_chance: The base change (percentage between 0 and 100) that the agent starts with an
+        infection.
+        """
         self.random = random
         if random.randrange(0, 100) < base_infection_chance:
             self.disease_state = DiseaseState.INFECTED
         else:
             self.disease_state = DiseaseState.HEALTHY
-        # self.last_disease_update = 0
+
         self.__next_disease_update = self.__get_next_update()
         """
         Describes the day on which the next update to the disease stage will be applied.
