@@ -84,7 +84,7 @@ class VirusAgent(Agent):
         if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
             return
 
-        other_agent.virus.infect(model.spread_chance, self.model.day)
+        other_agent.virus.infect(self.model.spread_chance, self.model.day)
 
     def new_day(self, day):
         """
@@ -109,7 +109,7 @@ class VirusAgent(Agent):
         if not self.virus.is_infectious():
             return
 
-        for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=3, moore=True):
+        for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=self.model.spread_distance, moore=True):
             self.handle_contact(other_agent)
 
 
