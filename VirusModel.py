@@ -1,18 +1,19 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.datacollection import DataCollector
-from mesa.visualization.modules import ChartModule
+from mesa.visualization.modules import ChartModule, TextElement
 from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.UserParam import UserSettableParameter                                               
 from CanvasRoomGrid import *
 from Virus import *
 from RoomGrid import *
 
-BASE_INFECTION_CHANCE = 3
+# BASE_INFECTION_CHANCE = 3
 """
 Describes the chance of an agent being infected at the start of the model
 """
 
-SPREAD_CHANCE = 8
+# SPREAD_CHANCE = 8
 """
 Describes the chance of the virus spreading to another agent. Applied every step.
 """
@@ -34,7 +35,7 @@ class VirusAgent(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
 
-        self.virus = Virus(self.model.random, BASE_INFECTION_CHANCE)
+        self.virus = Virus(self.model.random, model.base_infection_chance)
         self.quarantine = False
         """
         Keeps track of whether this agent is under quarantine or not
@@ -83,7 +84,7 @@ class VirusAgent(Agent):
         if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
             return
 
-        other_agent.virus.infect(SPREAD_CHANCE, self.model.day)
+        other_agent.virus.infect(model.spread_chance, self.model.day)
 
     def new_day(self, day):
         """
@@ -123,8 +124,14 @@ def get_death_count(model):
 class VirusModel(Model):
     """A model with some number of agents."""
 
-    def __init__(self, num_agents, grid_width, grid_height):
+    def __init__(self, num_agents, grid_width, grid_height,
+                 base_infection_chance, spread_distance, spread_chance,
+                 detection_time, choice_of_measure):
         self.num_agents = num_agents
+        self.base_infection_chance = base_infection_chance
+        self.spread_distance = spread_distance
+        self.spread_chance = spread_chance
+        self.detection_time = detection_time
         self.schedule = RandomActivation(self)
         self.grid = RoomGrid(grid_width, grid_height, False)
         self.running = True
@@ -210,10 +217,41 @@ def agent_portrayal(agent):
 
     return portrayal
 
+class TimeElement(TextElement):
+    def __init__(self):
+        pass
+
+    def render(self, model):
+        days = 1 + int(model.total_steps / 96)           
+        hours = 9 + int((model.total_steps % 96) / 4)
+        quarters = 15 * (model.total_steps % 4)
+        
+        if quarters == 0:
+            return "Day: " + str(days) + ", Time: " + str(hours) + ":" + str(quarters) +  "0"         
+        else:
+            return "Day: " + str(days) + ", Time: " + str(hours) + ":" + str(quarters)
+    
+time_element = TimeElement()
 
 grid_width = 100
 grid_height = 100
 num_agents = 300
+
+# Includes adjustable sliders for the user in the visualization        
+model_params = {
+        "static_text": UserSettableParameter('static_text', value="The options below allow you to adjust the parameter settings. After setting the options to the desired values, click 'Reset' and restart the simulation."),
+        "choice_of_measure": UserSettableParameter('choice', 'Mitigation measure applied', value='No measures',
+                                              choices=['No measures', 'Contact Tracing']),
+        # "contacttracing_option": UserSettableParameter('checkbox', 'Measure: Contact Tracing', value=True),
+        "num_agents": UserSettableParameter("slider", "Number of agents", 300, 10, 1000, 10),
+        "grid_width": grid_width,
+        "grid_height": grid_height,
+        "base_infection_chance": UserSettableParameter("slider", "Base infection probability", 3, 0, 100, 1),
+        "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)", 2, 1, 10, 1),
+        "spread_chance": UserSettableParameter("slider", "Spread probability", 8, 1, 100, 1),
+        "detection_time": UserSettableParameter("slider", "Detection time (in hours)", 32, 1, 120, 1)
+}
+       
 
 grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
 chart = ChartModule([{"Label": "infected",
@@ -222,8 +260,8 @@ chart = ChartModule([{"Label": "infected",
                       "Color": "Red"}],
                     data_collector_name='datacollector')
 server = ModularServer(VirusModel,
-                       [grid, chart],
+                       [time_element,grid, chart],
                        "Virus Model",
-                       {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_height})
-server.port = 8521
+                       model_params)
+server.port = 8522
 server.launch()
