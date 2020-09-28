@@ -149,6 +149,7 @@ grid_width = 100
 grid_height = 100
 num_agents = 300
 
+
 grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
 chart = ChartModule([{"Label": "infected",
                       "Color": "Black"}],
