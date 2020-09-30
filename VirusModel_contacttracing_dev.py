@@ -151,7 +151,7 @@ class VirusAgent(Agent):
 #           for other_agent in self.model.schedule.agent_buffer(shuffled=False):
 #              if other_agent.unique_id in ids_contact:
 #                   other_agent.enforce_quarantine(14)
-        
+         
         if self.test_result == 1:
             
             ids_contact = self.df_contacts.loc[self.day_tested - np.floor(self.df_contacts["time_contact"]/(24*4)) <= last_contact_days, "unique_id"].unique()
@@ -358,5 +358,5 @@ server = ModularServer(VirusModel,
                        [time_element,grid, chart],
                        "Virus Model",
                        model_params)
-server.port = 8528
+server.port = 8529
 server.launch()
