@@ -7,6 +7,8 @@ from mesa.visualization.UserParam import UserSettableParameter
 from CanvasRoomGrid import *
 from Virus import *
 from RoomGrid import *
+import pandas as pd
+import numpy as np
 
 # BASE_INFECTION_CHANCE = 3
 """
@@ -44,6 +46,20 @@ class VirusAgent(Agent):
         self.quarantine_duration = 0
         """
         Keeps track of the remaining number of days this agent will be quarantined.
+        """
+        self.test_result = 0
+        """
+        Keeps track of testing status: 0 is not tested, -1 is negative, 1 is positive
+        """
+        self.day_tested = float(np.nan)
+        """
+        Keeps track of the day when tested
+        """
+#        self.day_start_testable = np.inf
+#        self.days_testable = 0
+        self.df_contacts = pd.DataFrame(columns = ["unique_id", "time_contact"])
+        """
+        Traces the last contact to each other agent
         """
 
     def enforce_quarantine(self, days):
@@ -93,11 +109,77 @@ class VirusAgent(Agent):
         :param day: The number of the new day (assuming the models started at 0).
         """
         self.virus.handle_disease_progression(day)
+        
+        self.testing()
+        self.quarantine_agents()
 
         if self.quarantine:
             self.quarantine_duration -= 1
             if self.quarantine_duration <= 0:
                 self.quarantine = False
+                self.test_result = 0
+                
+
+    def testing(self ): #daily_testing_chance = self.model.daily_testing_chance
+        """"
+        testing agents (if virus testable)
+        
+        :param daily_testing_chance: The chance per day getting tested for an agent
+        """
+        if (self.model.random.randrange(0, 100) < self.model.daily_testing_chance) & (self.virus.disease_state != DiseaseState.DECEASED):
+            self.day_tested = self.model.day
+            if self.virus.disease_state >= DiseaseState.TESTABLE:
+                self.test_result = 1
+            else:
+                self.test_result = -1
+        
+        
+
+    def quarantine_agents(self, last_contact_days = 3): #, detection_days = 1
+        """"
+        quarantine agents after being tested positive or having contact to positive tested person
+        
+        :param last_contact_days: Quarantining agent if contact to positive agent in the last last_contact_days
+        """
+#        if self.virus.disease_state >= DiseaseState.TESTABLE:
+#            self.day_start_testable = min(self.day_start_testable, self.model.day)
+#            self.days_testable = self.model.day - self.day_start_testable
+        
+#        if self.days_testable >= detection_days:
+#           self.enforce_quarantine(14)
+#           ids_contact = self.df_contacts.loc[self.days_testable - np.floor(self.df_contacts["time_contact"]/(24*4)) <= tracking_days_removing, "unique_id"].unique()
+#           for other_agent in self.model.schedule.agent_buffer(shuffled=False):
+#              if other_agent.unique_id in ids_contact:
+#                   other_agent.enforce_quarantine(14)
+        
+        if self.test_result == 1:
+            
+            ids_contact = self.df_contacts.loc[self.day_tested - np.floor(self.df_contacts["time_contact"]/(24*4)) <= last_contact_days, "unique_id"].unique()
+            for other_agent in self.model.schedule.agent_buffer(shuffled=False):
+                if (other_agent.unique_id in ids_contact) & (other_agent.quarantine == False):
+                    other_agent.enforce_quarantine(14)            
+            
+            if self.quarantine == False:
+                self.enforce_quarantine(14)
+                    
+                
+    def trace_contact(self, distance_tracking = 1):
+        """"
+        tracing contact to each agent in certain radius with time of last contact
+        
+        :param distance_tracking: radius of moore-distance within contacts are traced
+        """
+        if self.quarantine == False:
+            
+            for other_agent in self.model.grid.get_neighbors(pos = self.pos, radius = distance_tracking, moore = True):
+                if other_agent.quarantine == False:
+                    self.df_contacts = self.df_contacts.append({"unique_id": other_agent.unique_id, "time_contact":self.model.total_steps},
+                                                               ignore_index=True)
+                    self.df_contacts = self.df_contacts.groupby("unique_id").max().reset_index()
+                    other_agent.df_contacts = other_agent.df_contacts.append({"unique_id": self.unique_id, "time_contact":self.model.total_steps},
+                                                               ignore_index=True)
+                    other_agent.df_contacts = other_agent.df_contacts.groupby("unique_id").max().reset_index()
+                
 
     def step(self):
         # No zombies allowed
@@ -111,6 +193,11 @@ class VirusAgent(Agent):
 
         for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=self.model.spread_distance, moore=True):
             self.handle_contact(other_agent)
+            
+        if self.model.choice_of_measure == 'Contact Tracing':
+
+            self.trace_contact()
+
 
 
 def get_infection_rate(model):
@@ -120,13 +207,16 @@ def get_infection_rate(model):
 def get_death_count(model):
     return int(np.sum([agent.virus.disease_state == DiseaseState.DECEASED for agent in model.schedule.agents]))
 
+def get_quarantined_count(model):
+    return int(np.sum([agent.quarantine == True for agent in model.schedule.agents]))
+
 
 class VirusModel(Model):
     """A model with some number of agents."""
 
     def __init__(self, num_agents, grid_width, grid_height,
                  base_infection_chance, spread_distance, spread_chance,
-                 detection_time, choice_of_measure):
+                 detection_time, daily_testing_chance, choice_of_measure):
         self.num_agents = num_agents
         self.base_infection_chance = base_infection_chance
         self.spread_distance = spread_distance
@@ -146,6 +236,8 @@ class VirusModel(Model):
         Describes the number of 'virtual' steps taken by the model. These are the skipped steps that represent the
         'night'.
         """
+        self.daily_testing_chance = daily_testing_chance
+        self.choice_of_measure = choice_of_measure
 
         # Create agents
         for uid in range(self.num_agents):
@@ -157,7 +249,7 @@ class VirusModel(Model):
             self.grid.place_agent(agent, (pos_x, pos_y))
 
         self.datacollector = DataCollector(
-            model_reporters={"infected": get_infection_rate, "deaths": get_death_count},
+            model_reporters={"infected": get_infection_rate, "deaths": get_death_count, "quarantined": get_quarantined_count},
             agent_reporters={"Position": "pos"})
 
     def next_day(self):
@@ -177,10 +269,10 @@ class VirusModel(Model):
             self.next_day()
 
         '''Advance the model by one step.'''
+                
         self.schedule.step()
 
         self.total_steps = self.schedule.steps + self.virtual_steps
-
 
 def agent_portrayal(agent):
     if agent.quarantine or agent.virus.disease_state is DiseaseState.DECEASED:
@@ -249,7 +341,8 @@ model_params = {
         "base_infection_chance": UserSettableParameter("slider", "Base infection probability", 3, 0, 100, 1),
         "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)", 2, 1, 10, 1),
         "spread_chance": UserSettableParameter("slider", "Spread probability", 8, 1, 100, 1),
-        "detection_time": UserSettableParameter("slider", "Detection time (in hours)", 32, 1, 120, 1)
+        "detection_time": UserSettableParameter("slider", "Detection time (in hours)", 32, 1, 120, 1),
+        "daily_testing_chance":UserSettableParameter("slider", "Daily probability of getting tested per agent", 10, 1, 100, 1)
 }
        
 
@@ -257,11 +350,13 @@ grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
 chart = ChartModule([{"Label": "infected",
                       "Color": "Black"},
                      {"Label": "deaths",
-                      "Color": "Red"}],
+                      "Color": "Red"}, 
+                     {"Label": "quarantined",
+                      "Color": "Yellow"}],
                     data_collector_name='datacollector')
 server = ModularServer(VirusModel,
                        [time_element,grid, chart],
                        "Virus Model",
                        model_params)
-server.port = 8524
+server.port = 8528
 server.launch()
