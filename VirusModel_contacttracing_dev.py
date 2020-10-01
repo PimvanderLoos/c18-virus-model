@@ -47,7 +47,7 @@ class VirusAgent(Agent):
         """
         Keeps track of the remaining number of days this agent will be quarantined.
         """
-        self.test_result = 0
+        self.test_result = 0 # np.nan
         """
         Keeps track of testing status: 0 is not tested, -1 is negative, 1 is positive
         """
@@ -126,12 +126,13 @@ class VirusAgent(Agent):
         
         :param daily_testing_chance: The chance per day getting tested for an agent
         """
-        if (self.model.random.randrange(0, 100) < self.model.daily_testing_chance) & (self.virus.disease_state != DiseaseState.DECEASED):
-            self.day_tested = self.model.day
-            if self.virus.disease_state >= DiseaseState.TESTABLE:
-                self.test_result = 1
-            else:
-                self.test_result = -1
+        if self.quarantine == False:
+            if (self.model.random.randrange(0, 100) < self.model.daily_testing_chance) & (self.virus.disease_state != DiseaseState.DECEASED):
+                self.day_tested = self.model.day
+                if self.virus.disease_state >= DiseaseState.TESTABLE:
+                    self.test_result = 1
+                else:
+                    self.test_result = -1
         
         
 
@@ -154,9 +155,9 @@ class VirusAgent(Agent):
          
         if self.test_result == 1:
             
-            ids_contact = self.df_contacts.loc[self.day_tested - np.floor(self.df_contacts["time_contact"]/(24*4)) <= last_contact_days, "unique_id"].unique()
+            ids_contact = self.df_contacts.loc[(self.day_tested - self.df_contacts["time_contact"]) <= last_contact_days, "unique_id"].unique()
             for other_agent in self.model.schedule.agent_buffer(shuffled=False):
-                if (other_agent.unique_id in ids_contact) & (other_agent.quarantine == False):
+                if (other_agent.unique_id in list(ids_contact)) & (other_agent.quarantine == False):
                     other_agent.enforce_quarantine(14)            
             
             if self.quarantine == False:
@@ -173,10 +174,10 @@ class VirusAgent(Agent):
             
             for other_agent in self.model.grid.get_neighbors(pos = self.pos, radius = distance_tracking, moore = True):
                 if other_agent.quarantine == False:
-                    self.df_contacts = self.df_contacts.append({"unique_id": other_agent.unique_id, "time_contact":self.model.total_steps},
+                    self.df_contacts = self.df_contacts.append({"unique_id": other_agent.unique_id, "time_contact":self.model.day},
                                                                ignore_index=True)
                     self.df_contacts = self.df_contacts.groupby("unique_id").max().reset_index()
-                    other_agent.df_contacts = other_agent.df_contacts.append({"unique_id": self.unique_id, "time_contact":self.model.total_steps},
+                    other_agent.df_contacts = other_agent.df_contacts.append({"unique_id": self.unique_id, "time_contact":self.model.day},
                                                                ignore_index=True)
                     other_agent.df_contacts = other_agent.df_contacts.groupby("unique_id").max().reset_index()
                 
@@ -199,7 +200,7 @@ class VirusAgent(Agent):
             self.trace_contact()
 
 
-
+# Functions for the Datacollector
 def get_infection_rate(model):
     return int(np.sum([agent.virus.is_infected() for agent in model.schedule.agents]))
 
@@ -210,18 +211,47 @@ def get_death_count(model):
 def get_quarantined_count(model):
     return int(np.sum([agent.quarantine == True for agent in model.schedule.agents]))
 
+def get_healty_count(model):
+    return int(np.sum([agent.virus.disease_state == DiseaseState.HEALTHY for agent in model.schedule.agents]))
+def get_recovered_count(model):
+    return int(np.sum([agent.virus.disease_state == DiseaseState.RECOVERED for agent in model.schedule.agents]))
+def get_infected_count(model):
+    return int(np.sum([agent.virus.disease_state == DiseaseState.INFECTED for agent in model.schedule.agents]))
+def get_testable_count(model):
+    return int(np.sum([agent.virus.disease_state == DiseaseState.TESTABLE for agent in model.schedule.agents]))
+def get_infectious_count(model):
+    return int(np.sum([agent.virus.disease_state == DiseaseState.INFECTIOUS for agent in model.schedule.agents]))
+def get_symptomatic_count(model):
+    return int(np.sum([agent.virus.disease_state == DiseaseState.SYMPTOMATIC for agent in model.schedule.agents]))
+
+def get_tested_count(model):
+    return int(np.sum([agent.test_result in [-1, 1]  for agent in model.schedule.agents]))
+def get_tested_positive_count(model):
+    return int(np.sum([agent.test_result in [1]  for agent in model.schedule.agents]))
+def get_tested_negative_count(model):
+    return int(np.sum([agent.test_result in [-1]  for agent in model.schedule.agents]))
+
+def get_quarantined_infected(model):
+    return int(np.sum([(agent.quarantine == True)&(agent.virus.is_infected())  for agent in model.schedule.agents]))
+def get_quarantined_healthy(model):
+    return int(np.sum([(agent.quarantine == True)&(not agent.virus.is_infected())  for agent in model.schedule.agents]))
+def get_notquarantined_infected(model):
+    return int(np.sum([(agent.quarantine == False)&(agent.virus.is_infected())  for agent in model.schedule.agents]))
+
+disease_states = [DiseaseState.DECEASED, DiseaseState.HEALTHY, DiseaseState.RECOVERED, DiseaseState.INFECTED,
+                  DiseaseState.TESTABLE, DiseaseState.INFECTIOUS, DiseaseState.SYMPTOMATIC]
+
 
 class VirusModel(Model):
     """A model with some number of agents."""
 
     def __init__(self, num_agents, grid_width, grid_height,
                  base_infection_chance, spread_distance, spread_chance,
-                 detection_time, daily_testing_chance, choice_of_measure):
+                 daily_testing_chance, choice_of_measure):
         self.num_agents = num_agents
         self.base_infection_chance = base_infection_chance
         self.spread_distance = spread_distance
         self.spread_chance = spread_chance
-        self.detection_time = detection_time
         self.schedule = RandomActivation(self)
         self.grid = RoomGrid(grid_width, grid_height, False)
         self.running = True
@@ -249,7 +279,12 @@ class VirusModel(Model):
             self.grid.place_agent(agent, (pos_x, pos_y))
 
         self.datacollector = DataCollector(
-            model_reporters={"infected": get_infection_rate, "deaths": get_death_count, "quarantined": get_quarantined_count},
+            model_reporters={"infected": get_infection_rate, "deaths": get_death_count, "quarantined": get_quarantined_count,
+                             "healthy": get_healty_count, "just infected": get_infected_count, "testable": get_testable_count,
+                             "infectious": get_infectious_count, "symptomatic": get_symptomatic_count, "recovered": get_recovered_count,
+                             "quarantined: infected": get_quarantined_infected, "quarantined: healthy": get_quarantined_healthy,
+                             "not quarantined: infected": get_notquarantined_infected, 
+                             "tested total": get_tested_count, "tested positive": get_tested_positive_count, "tested negative": get_tested_negative_count},
             agent_reporters={"Position": "pos"})
 
     def next_day(self):
@@ -341,7 +376,6 @@ model_params = {
         "base_infection_chance": UserSettableParameter("slider", "Base infection probability", 3, 0, 100, 1),
         "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)", 2, 1, 10, 1),
         "spread_chance": UserSettableParameter("slider", "Spread probability", 8, 1, 100, 1),
-        "detection_time": UserSettableParameter("slider", "Detection time (in hours)", 32, 1, 120, 1),
         "daily_testing_chance":UserSettableParameter("slider", "Daily probability of getting tested per agent", 10, 1, 100, 1)
 }
        
@@ -354,9 +388,41 @@ chart = ChartModule([{"Label": "infected",
                      {"Label": "quarantined",
                       "Color": "Yellow"}],
                     data_collector_name='datacollector')
+chart_disease_state = ChartModule([{"Label": "just infected",
+                      "Color": "rgba(0,0,255,1)"}, 
+                     {"Label": "testable",
+                      "Color": "rgba(255,0,212,1)"},
+                     {"Label": "infectious",
+                      "Color": "rgba(255,0,0,1)"},
+                     {"Label": "symptomatic",
+                      "Color": "rgba(102,0,0,1)"}, 
+                     {"Label": "recovered",
+                      "Color": "rgba(8,323,222,1)"},
+                     {"Label": "deaths",
+                      "Color": "Brown"}
+                     ],
+                     # include healthy? {"Label": "healthy", "Color": "rgba(43,255,0,1)"},
+                    data_collector_name='datacollector')
+chart_quarantined = ChartModule([{"Label": "quarantined: infected",
+                      "Color": "Green"},
+                     {"Label": "quarantined: healthy",
+                      "Color": "Yellow"}, 
+                     {"Label": "not quarantined: infected",
+                      "Color": "Red"}],
+                    data_collector_name='datacollector')
+chart_testing = ChartModule([{"Label": "tested total",
+                      "Color": "Black"},
+                     {"Label": "tested negative",
+                      "Color": "Blue"}, 
+                     {"Label": "tested positive",
+                      "Color": "Red"}],
+                    data_collector_name='datacollector')
+
 server = ModularServer(VirusModel,
-                       [time_element,grid, chart],
+                       [time_element,grid, chart, chart_disease_state, chart_quarantined, chart_testing],
                        "Virus Model",
                        model_params)
-server.port = 8529
+
+server.port = 8526
 server.launch()
+
