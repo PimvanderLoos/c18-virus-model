@@ -6,7 +6,6 @@ Code for the implementation of our project called 'Contact tracing in virus mode
 
 ### Running instructions
 1)  Install mesa
-
 ```shell
 $ pip install mesa
 ```
@@ -16,7 +15,12 @@ $ pip install mesa
 $ pip install -r https://raw.githubusercontent.com/projectmesa/mesa/master/examples/boltzmann_wealth_model/requirements.txt
 ```
 
-3) Run the program
+3) Clone the online repository:
+```shell
+$ git clone https://github.com/PimvanderLoos/c18-virus-model.git
+```
+
+4) Run the program (from Master branch)
 ```shell
 $ python VirusModel_contacttracing_dev.py
 ```
