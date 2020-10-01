@@ -13,23 +13,18 @@ from RoomGrid import *
 BASE_INFECTION_CHANCE = 3
 SPREAD_CHANCE = 8
 SPREAD_DISTANCE_SQ = 1.5 * 1.5
-#0 TO 100 when zero then each person will sit next to different persons and different classrooms.
-#When 100 then each person sits in the same room and next to the same people.
-SCHEDULE_SIMILARITY = 0
 
-#def get_rooster(room_similarity, model):
 
 class VirusAgent(Agent):
     """ An agent with fixed initial wealth."""
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.infected = model.random.randrange(0, 100) < BASE_INFECTION_CHANCE
+
 ### contact tracing
         self.contact_infected = False        
         self.time_infected = 0
         self.time_contact_infected = 0
- #       self.weeks_rooster = get_rooster(room_similarity, model)
-        print("bug stop")
         
     def list_removing(self, detection_time = 4*8):
         if self.infected:
@@ -103,7 +98,7 @@ class VirusModel(Model):
         self.running = True
         self.removing_agents = []
         self.removed_agents = []
-        #x = self.grid.rooms[0][0].seats[0]
+
         # Create agents
         for uid in range(self.num_agents):
             agent = VirusAgent(uid, self)
@@ -132,7 +127,7 @@ class VirusModel(Model):
             
                 
         except:
-            print(str("removed_agents"))
+            print(str(self.removed_agents))
 ###
 
 
@@ -164,3 +159,60 @@ server = ModularServer(VirusModel,
                        {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_height})
 server.port = 8538
 server.launch()
+
+
+# num_agents = 200
+# grid_width = 100
+# grid_height = 100
+# model_steps = 450
+#
+# # model = VirusModel(num_agents=num_agents, grid_width=grid_width, grid_height=grid_height)
+#
+# grid = CanvasGrid(agent_portrayal, grid_width, grid_height, grid_width * 2, grid_height * 2)
+# server = ModularServer(VirusModel,
+#                        [grid],
+#                        "Virus Model",
+#                        {"num_agents": num_agents, "grid_width": grid_width, "grid_height": grid_height})
+# server.port = 8521
+# server.launch()
+# model = server.model_cls
+#
+# # for run in range(model_steps):
+# #     model.step()
+# #
+# # plt.plot(model.datacollector.get_model_vars_dataframe())
+# # plt.show()
+#
+# # agent_dataframe = model.datacollector.get_agent_vars_dataframe()
+# # agents_array = np.reshape(agent_dataframe.to_numpy(), (model_steps, num_agents))
+# #
+# # fig = plt.figure()
+# # ax = fig.gca()
+# # ax.set_xticks(range(grid_width))
+# # ax.set_yticks(range(grid_height))
+# # plt.grid()
+# # plt.axis('off')
+# #
+# # percentage_to_draw = 10
+# # # for agent_idx in range(10):
+# # for agent_idx in range(num_agents):
+# #     if model.random.randrange(0, 100) > percentage_to_draw:
+# #         continue
+# #     agent_color = (model.random.randrange(0, 255, 1) / 255.0,
+# #                    model.random.randrange(0, 255, 1) / 255.0,
+# #                    model.random.randrange(0, 255, 1) / 255.0)
+# #     for run in range(model_steps - 1):
+# #         pos = agents_array[run][agent_idx]
+# #         next_pos = agents_array[run + 1][agent_idx]
+# #
+# #         if abs(pos[0] - next_pos[0]) is (grid_width - 1) or abs(pos[1] - next_pos[1]) is (grid_height - 1):
+# #             continue
+# #
+# #         line = mlines.Line2D([pos[0], next_pos[0]], [pos[1], next_pos[1]], color=agent_color)
+# #         ax.add_line(line)
+# # plt.show()
+
+
+
+
+
