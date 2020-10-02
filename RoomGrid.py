@@ -133,7 +133,9 @@ class LectureRoom:
     def populate_seats(self):
         for x in range(self.x_min_seat, self.x_max_seat):
             for y in range(self.y_min_seat, self.y_max_seat):
-                self.seats.append(Seat(x, y))
+                # Add x/y_min to convert the values too global coords and 1 because of the empty space
+                # Between the wall and the seats.
+                self.seats.append(Seat(self.x_min + 1 + x, self.y_min + 1 + y))
 
     def is_wall(self, x, y):
         """
