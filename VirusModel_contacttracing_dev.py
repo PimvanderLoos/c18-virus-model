@@ -224,7 +224,7 @@ class VirusAgent(Agent):
         if room_rooster_id != self.room.room_id: #switch to different room
                 if room_rooster_id == 20:
                     (pos_x, pos_y) = self.model.grid.get_random_pos(self.random)
-                    self.grid.place_agent(self, (pos_x, pos_y))
+                    self.model.grid.place_agent(self, (pos_x, pos_y))
                 else:
                     new_room = self.model.grid.rooms_list[room_rooster_id]
                     self.room = new_room
