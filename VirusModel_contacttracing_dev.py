@@ -9,6 +9,7 @@ from Virus import *
 from RoomGrid import *
 import pandas as pd
 import numpy as np
+from Rooster import *
 
 # BASE_INFECTION_CHANCE = 3
 """
@@ -35,7 +36,21 @@ class VirusAgent(Agent):
 
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
+        self.in_lecture = False
+        self.agent_id = unique_id
+        self.day_time = 0
+        self.model = model
+        self.rooster_agent = Rooster_agent(self, model)
+        self.room = 0
+        self.seat = 0
+        self.rooster_agent.get_rooster(model)
+        self.set_room()
+        self.set_seat()
 
+
+        """
+        The day rooster where the agent will sit or walk.
+        """
         self.virus = Virus(self.model.random, model.base_infection_chance)
         self.quarantine = False
         """
@@ -79,6 +94,10 @@ class VirusAgent(Agent):
 
         self.model.grid.move_agent(self, new_position)
 
+    def move_to_seat(self, room, seat):
+        new_position = (1, 2)
+        self.model.grid.move_agent(self, new_position)
+
     def handle_contact(self, other_agent):
         """
         Attempts to spread the virus to another agent. This only has an effect if the other agent isn't already infected.
@@ -100,7 +119,22 @@ class VirusAgent(Agent):
 
         other_agent.virus.infect(self.model.spread_chance, self.model.day)
 
-    def new_day(self, day):
+    def set_room(self):
+        room_id = self.rooster_agent.rooster[0]
+        self.room = self.model.grid.rooms_list[room_id]
+        print("bug st")
+
+    def set_seat(self):
+        for seat in self.room.seats:
+            if seat.available == True:
+                seat.available = False
+                new_position = (self.room.seat.x, seat.y)
+                self.model.grid.move_agent(self, new_position)
+                self.seat = seat
+                break
+
+
+    def new_day(self, day, model):
         """
         Handles the start of a new day.
 
@@ -116,6 +150,9 @@ class VirusAgent(Agent):
             if self.quarantine_duration <= 0:
                 self.quarantine = False
                 self.test_result = 0
+
+        self.day_time = 0
+
                 
     def testing(self ): #daily_testing_chance = self.model.daily_testing_chance
         """"
@@ -167,22 +204,169 @@ class VirusAgent(Agent):
                     other_agent.df_contacts = other_agent.df_contacts.groupby("unique_id").max().reset_index()
                 
 
+    def get_present_room(self):
+        rooster = self.rooster.rooster[self.day_time]
+        return rooster
+
+
+
     def step(self):
         # No zombies allowed
         if self.virus.disease_state == DiseaseState.DECEASED or self.quarantine:
+            self.day_time += 1
             return
 
-        self.move()
+
+        step = self.model.day_step
+        room_rooster_id = self.rooster_agent.rooster[step]
+        if room_rooster_id != 20:
+            self.in_lecture = True
+        else:
+            self.in_lecture = False
+
+        if room_rooster_id != self.room.room_id: #switch to different room
+                if room_rooster_id == 20:
+                    (pos_x, pos_y) = self.model.grid.get_random_pos(self.random)
+                    self.grid.place_agent(self, (pos_x, pos_y))
+                else:
+                    new_room = self.model.grid.rooms_list[room_rooster_id]
+                    self.room = new_room
+                    self.set_seat()
+        print("bug stop")
+
+
+
 
         if not self.virus.is_infectious():
+            self.day_time  += 1
             return
 
         for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=self.model.spread_distance, moore=True):
             self.handle_contact(other_agent)
             
         if self.model.choice_of_measure == 'Contact Tracing':
-
             self.trace_contact()
+        self.day_time += 1
+
+
+
+
+
+class VirusModel(Model):
+    """A model with some number of agents."""
+
+    def __init__(self, num_agents, grid_width, grid_height,
+                 base_infection_chance, spread_distance, spread_chance,
+                 daily_testing_chance, choice_of_measure):
+        self.num_agents = num_agents
+        self.base_infection_chance = base_infection_chance
+        self.spread_distance = spread_distance
+        self.spread_chance = spread_chance
+        self.schedule = RandomActivation(self)
+        self.grid = RoomGrid(grid_width, grid_height, False)
+        self.running = True
+        self.day = 0
+        self.total_steps = 0
+        self.day_step = 0
+        self.rooster_model = Rooster_model(self)
+        self.rooster_model.make_day_rooster(self)
+        """
+        Describes the 'total' number of steps taken by the model so far, including the virtual 'night' steps.
+        """
+        self.virtual_steps = 0
+        """
+        Describes the number of 'virtual' steps taken by the model. These are the skipped steps that represent the
+        'night'.
+        """
+        self.daily_testing_chance = daily_testing_chance
+        self.choice_of_measure = choice_of_measure
+
+        # Create agents
+        for uid in range(self.num_agents):
+            agent = VirusAgent(uid, self)
+            self.schedule.add(agent)
+            # Add the agent to a 'random' grid cell
+            (pos_x, pos_y) = self.grid.get_random_pos(self.random)
+            self.grid.place_agent(agent, (pos_x, pos_y))
+
+        self.datacollector = DataCollector(
+            model_reporters={"infected": get_infection_rate, "deaths": get_death_count, "quarantined": get_quarantined_count,
+                             "healthy": get_healty_count, "just infected": get_infected_count, "testable": get_testable_count,
+                             "infectious": get_infectious_count, "symptomatic": get_symptomatic_count, "recovered": get_recovered_count,
+                             "quarantined: infected": get_quarantined_infected, "quarantined: healthy": get_quarantined_healthy,
+                             "not quarantined: infected": get_notquarantined_infected, 
+                             "tested total": get_tested_count, "tested positive": get_tested_positive_count, "tested negative": get_tested_negative_count},
+            agent_reporters={"Position": "pos"})
+
+    def set_day_step(self):
+        full_day = 24*4
+        self.day_step = (self.total_steps % full_day)
+
+    def clear_rooms(self):
+        for room in self.grid.rooms_list:
+            for seat in room.seats:
+                seat.available = True
+
+    def next_day(self):
+        """
+        Handles the start of a new day.
+        """
+        self.rooster_model.make_day_rooster(self)
+        self.day = int(self.schedule.steps / DAY_DURATION)
+        for agent in self.schedule.agent_buffer(shuffled=False):
+            agent.new_day(self.day, self)
+
+        self.virtual_steps = self.day * NIGHT_DURATION
+        print("NEXT DAY: {}".format(self.day))
+
+    def step(self):
+        self.clear_rooms()
+        self.set_day_step()
+        self.datacollector.collect(self)
+        if self.schedule.steps % DAY_DURATION == 0:
+            self.next_day()
+
+        '''Advance the model by one step.'''
+                
+        self.schedule.step()
+
+        self.total_steps = self.schedule.steps + self.virtual_steps
+
+def agent_portrayal(agent):
+    if agent.quarantine or agent.virus.disease_state is DiseaseState.DECEASED:
+        return {}
+
+    portrayal = {"Shape": "circle",
+                 "Filled": "true",
+                 "r": 0.5}
+
+    # Useful site for picking colors: https://rgbcolorcode.com/
+    if agent.virus.disease_state is DiseaseState.HEALTHY:
+        portrayal["Color"] = "rgba(43,255,0,1)"  # Bright green
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.INFECTED:
+        portrayal["Color"] = "rgba(0,0,255,1)"  # Blue
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.TESTABLE:
+        portrayal["Color"] = "rgba(255,0,212,1)"  # Bright purple
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.INFECTIOUS:
+        portrayal["Color"] = "rgba(255,0,0,1)"  # Red
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.SYMPTOMATIC:
+        portrayal["Color"] = "rgba(102,0,0,1)"  # Dark red
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+    elif agent.virus.disease_state is DiseaseState.RECOVERED:
+        portrayal["Color"] = "rgba(8,323,222,1)"  # Bright turquoise
+        portrayal["Layer"] = 0
+
+    return portrayal
+
 
 
 
@@ -229,106 +413,8 @@ disease_states = [DiseaseState.DECEASED, DiseaseState.HEALTHY, DiseaseState.RECO
                   DiseaseState.TESTABLE, DiseaseState.INFECTIOUS, DiseaseState.SYMPTOMATIC]
 
 
-class VirusModel(Model):
-    """A model with some number of agents."""
 
-    def __init__(self, num_agents, grid_width, grid_height,
-                 base_infection_chance, spread_distance, spread_chance,
-                 daily_testing_chance, choice_of_measure):
-        self.num_agents = num_agents
-        self.base_infection_chance = base_infection_chance
-        self.spread_distance = spread_distance
-        self.spread_chance = spread_chance
-        self.schedule = RandomActivation(self)
-        self.grid = RoomGrid(grid_width, grid_height, False)
-        self.running = True
-        self.day = 0
-        self.total_steps = 0
-        """
-        Describes the 'total' number of steps taken by the model so far, including the virtual 'night' steps.
-        """
-        self.virtual_steps = 0
-        """
-        Describes the number of 'virtual' steps taken by the model. These are the skipped steps that represent the
-        'night'.
-        """
-        self.daily_testing_chance = daily_testing_chance
-        self.choice_of_measure = choice_of_measure
 
-        # Create agents
-        for uid in range(self.num_agents):
-            agent = VirusAgent(uid, self)
-            self.schedule.add(agent)
-
-            # Add the agent to a 'random' grid cell
-            (pos_x, pos_y) = self.grid.get_random_pos(self.random)
-            self.grid.place_agent(agent, (pos_x, pos_y))
-
-        self.datacollector = DataCollector(
-            model_reporters={"infected": get_infection_rate, "deaths": get_death_count, "quarantined": get_quarantined_count,
-                             "healthy": get_healty_count, "just infected": get_infected_count, "testable": get_testable_count,
-                             "infectious": get_infectious_count, "symptomatic": get_symptomatic_count, "recovered": get_recovered_count,
-                             "quarantined: infected": get_quarantined_infected, "quarantined: healthy": get_quarantined_healthy,
-                             "not quarantined: infected": get_notquarantined_infected, 
-                             "tested total": get_tested_count, "tested positive": get_tested_positive_count, "tested negative": get_tested_negative_count},
-            agent_reporters={"Position": "pos"})
-
-    def next_day(self):
-        """
-        Handles the start of a new day.
-        """
-        self.day = int(self.schedule.steps / DAY_DURATION)
-        for agent in self.schedule.agent_buffer(shuffled=False):
-            agent.new_day(self.day)
-
-        self.virtual_steps = self.day * NIGHT_DURATION
-        print("NEXT DAY: {}".format(self.day))
-
-    def step(self):
-        self.datacollector.collect(self)
-        if self.schedule.steps % DAY_DURATION == 0:
-            self.next_day()
-
-        '''Advance the model by one step.'''
-                
-        self.schedule.step()
-
-        self.total_steps = self.schedule.steps + self.virtual_steps
-
-def agent_portrayal(agent):
-    if agent.quarantine or agent.virus.disease_state is DiseaseState.DECEASED:
-        return {}
-
-    portrayal = {"Shape": "circle",
-                 "Filled": "true",
-                 "r": 0.5}
-
-    # Useful site for picking colors: https://rgbcolorcode.com/
-    if agent.virus.disease_state is DiseaseState.HEALTHY:
-        portrayal["Color"] = "rgba(43,255,0,1)"  # Bright green
-        portrayal["Layer"] = 1
-        portrayal["r"] = 0.5
-    elif agent.virus.disease_state is DiseaseState.INFECTED:
-        portrayal["Color"] = "rgba(0,0,255,1)"  # Blue
-        portrayal["Layer"] = 1
-        portrayal["r"] = 0.5
-    elif agent.virus.disease_state is DiseaseState.TESTABLE:
-        portrayal["Color"] = "rgba(255,0,212,1)"  # Bright purple
-        portrayal["Layer"] = 1
-        portrayal["r"] = 0.5
-    elif agent.virus.disease_state is DiseaseState.INFECTIOUS:
-        portrayal["Color"] = "rgba(255,0,0,1)"  # Red
-        portrayal["Layer"] = 1
-        portrayal["r"] = 0.5
-    elif agent.virus.disease_state is DiseaseState.SYMPTOMATIC:
-        portrayal["Color"] = "rgba(102,0,0,1)"  # Dark red
-        portrayal["Layer"] = 1
-        portrayal["r"] = 0.5
-    elif agent.virus.disease_state is DiseaseState.RECOVERED:
-        portrayal["Color"] = "rgba(8,323,222,1)"  # Bright turquoise
-        portrayal["Layer"] = 0
-
-    return portrayal
 
 class TimeElement(TextElement):
     def __init__(self):

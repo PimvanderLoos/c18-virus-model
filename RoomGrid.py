@@ -115,6 +115,12 @@ class LectureRoom:
         self.seats = []
         self.populate_seats()
 
+    def room_available(self):
+        for seat in self.seats:
+            if seat.available:
+                return True
+        return False
+
     def is_in_room(self, x, y):
         """
         Checks if a given coordinate pair is inside this room. Note that this does NOT include the walls!
@@ -219,6 +225,7 @@ class RoomGrid(MultiGrid):
         self.room_size = room_size + 1  # Add 1 to account for the walls.
         self.room_row_size = math.ceil(math.sqrt(room_count))
         self.rooms = np.empty((self.room_row_size, self.room_row_size), dtype=LectureRoom)
+        self.rooms_list = []
         self.rows = np.empty(self.room_row_size, dtype=object)
         self.generate_rooms()
 
@@ -250,7 +257,9 @@ class RoomGrid(MultiGrid):
         y_min = y_coordinates[0]
         y_max = y_coordinates[1]
 
-        self.rooms[row][col] = LectureRoom(room_idx, x_min, y_min, x_max, y_max, entry_side)
+        r = LectureRoom(room_idx, x_min, y_min, x_max, y_max, entry_side)
+        self.rooms[row][col] = r
+        self.rooms_list.append(r)
 
     def is_edge(self, x, y):
         return x == 0 or y == 0 or x == (self.width - 1) or y == (self.height - 1)
@@ -288,7 +297,7 @@ class RoomGrid(MultiGrid):
         if room is None:
             return True
 
-        return allowed_in_rooms and room.is_available(x, y)
+        return allowed_in_rooms or room.is_available(x, y)
 
     def get_portrayal(self, x, y):
         if self.is_edge(x, y):
