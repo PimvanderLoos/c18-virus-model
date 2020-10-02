@@ -44,9 +44,6 @@ class VirusAgent(Agent):
         self.room = 0
         self.seat = 0
         self.rooster_agent.get_rooster(model)
-        self.set_room()
-        self.set_seat()
-
 
         """
         The day rooster where the agent will sit or walk.
@@ -128,7 +125,7 @@ class VirusAgent(Agent):
         for seat in self.room.seats:
             if seat.available == True:
                 seat.available = False
-                new_position = (self.room.seat.x, seat.y)
+                new_position = (seat.x, seat.y)
                 self.model.grid.move_agent(self, new_position)
                 self.seat = seat
                 break
@@ -288,6 +285,8 @@ class VirusModel(Model):
             # Add the agent to a 'random' grid cell
             (pos_x, pos_y) = self.grid.get_random_pos(self.random)
             self.grid.place_agent(agent, (pos_x, pos_y))
+            agent.set_room()
+            agent.set_seat()
 
         self.datacollector = DataCollector(
             model_reporters={"infected": get_infection_rate, "deaths": get_death_count, "quarantined": get_quarantined_count,
