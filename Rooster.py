@@ -15,7 +15,7 @@ DAY_DURATION = 8 * 4
 AMOUNT_OF_ROOMS = 21
 ROOM_CAPACITY = 168
 LECTURES_PER_DAY = 3
-AMOUNT_OF_AGENTS = 300
+AMOUNT_OF_AGENTS = 800
 
 class Rooster_agent:
     def __init__(self, Agent, Model):

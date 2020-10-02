@@ -39,7 +39,6 @@ class VirusAgent(Agent):
         self.in_lecture = False
         self.agent_id = unique_id
         self.day_time = 0
-        self.model = model
         self.rooster_agent = Rooster_agent(self, model)
         self.room = 0
         self.seat = 0
@@ -123,6 +122,8 @@ class VirusAgent(Agent):
 
     def set_seat(self):
         for seat in self.room.seats:
+            if self.agent_id == 531:
+                print("bug stop")
             if seat.available == True:
                 seat.available = False
                 new_position = (seat.x, seat.y)
@@ -433,7 +434,7 @@ time_element = TimeElement()
 
 grid_width = 100
 grid_height = 100
-num_agents = 300
+num_agents = 800
 
 # Includes adjustable sliders for the user in the visualization        
 model_params = {
@@ -441,7 +442,7 @@ model_params = {
         "choice_of_measure": UserSettableParameter('choice', 'Mitigation measure applied', value='No measures',
                                               choices=['No measures', 'Contact Tracing']),
         # "contacttracing_option": UserSettableParameter('checkbox', 'Measure: Contact Tracing', value=True),
-        "num_agents": UserSettableParameter("slider", "Number of agents", 300, 10, 1000, 10),
+        "num_agents": UserSettableParameter("slider", "Number of agents", num_agents, 10, 1000, 10),
         "grid_width": grid_width,
         "grid_height": grid_height,
         "base_infection_chance": UserSettableParameter("slider", "Base infection probability", 3, 0, 100, 1),
