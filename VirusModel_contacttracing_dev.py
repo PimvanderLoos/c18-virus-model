@@ -3,7 +3,7 @@ from mesa.time import RandomActivation
 from mesa.datacollection import DataCollector
 from mesa.visualization.modules import ChartModule, TextElement
 from mesa.visualization.ModularVisualization import ModularServer
-from mesa.visualization.UserParam import UserSettableParameter                                               
+from mesa.visualization.UserParam import UserSettableParameter
 from CanvasRoomGrid import *
 from Virus import *
 from RoomGrid import *
@@ -31,11 +31,13 @@ NIGHT_DURATION = 24 * 4 - DAY_DURATION
 The number of ticks that fit into a 'night'.
 """
 
+
 class VirusAgent(Agent):
     """ An agent with fixed initial wealth."""
 
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
+        self.model = model
         self.in_lecture = False
         self.agent_id = unique_id
         self.day_time = 0
@@ -56,7 +58,7 @@ class VirusAgent(Agent):
         """
         Keeps track of the remaining number of days this agent will be quarantined.
         """
-        self.test_result = 0 # np.nan
+        self.test_result = 0  # np.nan
         """
         Keeps track of testing status: 0 is not tested, -1 is negative, 1 is positive
         """
@@ -66,7 +68,7 @@ class VirusAgent(Agent):
         """
 #        self.day_start_testable = np.inf
 #        self.days_testable = 0
-        self.df_contacts = pd.DataFrame(columns = ["unique_id", "time_contact"])
+        self.df_contacts = pd.DataFrame(columns=["unique_id", "time_contact"])
         """
         Traces the last contact to each other agent
         """
@@ -121,13 +123,12 @@ class VirusAgent(Agent):
 
     def set_seat(self):
         for seat in self.room.seats:
-            if seat.available == True:
+            if seat.available:
                 seat.available = False
                 new_position = (seat.x, seat.y)
                 self.model.grid.move_agent(self, new_position)
                 self.seat = seat
                 break
-
 
     def new_day(self, day, model):
         """
@@ -147,9 +148,8 @@ class VirusAgent(Agent):
                 self.test_result = 0
 
         self.day_time = 0
-
                 
-    def testing(self ): #daily_testing_chance = self.model.daily_testing_chance
+    def testing(self):
         """"
         testing agents (if virus testable)
         
@@ -247,19 +247,10 @@ class VirusAgent(Agent):
             self.day_time += 1
             return
 
+        # Out of bounds after step 32.
         step = self.model.day_step
         room_rooster_id = self.rooster_agent.rooster[step]
         self.do_rooster_step(room_rooster_id)
-
-        # Debug shit, feel free to ignore it.
-        # Basically, some agents are rendered outside of rooms while they should be inside them.
-        # Perhaps they are simply duplicated? More debugging required.
-        # I think there might be a setposition instead of move somewhere in the init.
-        if self.pos[0] > 90:
-            if self.room is not None:
-                print("Found agent {} at pos: [{} {}]. In lecture? {}. RoomID: {}".format(self.unique_id, self.pos[0], self.pos[1], self.in_lecture, self.room.room_id))
-            else:
-                print("Found agent {} at pos: [{} {}]. In lecture? {}. NOT IN A ROOM!".format(self.unique_id, self.pos[0], self.pos[1], self.in_lecture))
 
         # Free to move around wherever they want! Just not in the rooms.
         if not self.in_lecture:
@@ -294,7 +285,7 @@ class VirusModel(Model):
         self.total_steps = 0
         self.day_step = 0
         self.rooster_model = Rooster_model(self)
-        self.rooster_model.make_day_rooster(self)
+        self.rooster_model.make_day_rooster()
         """
         Describes the 'total' number of steps taken by the model so far, including the virtual 'night' steps.
         """
@@ -310,9 +301,8 @@ class VirusModel(Model):
         for uid in range(self.num_agents):
             agent = VirusAgent(uid, self)
             self.schedule.add(agent)
-            # Add the agent to a 'random' grid cell
-            (pos_x, pos_y) = self.grid.get_random_pos(self.random)
-            self.grid.place_agent(agent, (pos_x, pos_y))
+
+            agent.move_to_random_position()
             agent.set_room()
             agent.set_seat()
 
@@ -338,7 +328,7 @@ class VirusModel(Model):
         """
         Handles the start of a new day.
         """
-        self.rooster_model.make_day_rooster(self)
+        self.rooster_model.make_day_rooster()
         self.day = int(self.schedule.steps / DAY_DURATION)
         for agent in self.schedule.agent_buffer(shuffled=False):
             agent.new_day(self.day, self)

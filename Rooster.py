@@ -9,11 +9,11 @@ import matplotlib.lines as mlines
 import numpy as np
 from CanvasRoomGrid import *
 from RoomGrid import *
+
 DAY_PARTS = 4
-DAY_PART_DURATION = 8 #steps to make 2 hours
+DAY_PART_DURATION = 8  # steps to make 2 hours
 DAY_DURATION = 8 * 4
 AMOUNT_OF_ROOMS = 21
-ROOM_CAPACITY = 168
 LECTURES_PER_DAY = 3
 AMOUNT_OF_AGENTS = 800
 
@@ -52,28 +52,41 @@ class Rooster_agent:
             if seat.available:
                 return seat
 
+
 class Rooster_model:
-    def __init__(self, Model):
-       # amount of rooms
-        self.rooster = np.full(((DAY_DURATION), Model.num_agents), 20)
-    """
+    def __init__(self, model):
+        self.model = model
+
+        self.break_room_id = self.model.grid.room_count
+        """
+        The ID of the 'break' room. I.e. the room where agents go to if they don't have any lectures.
+        """
+
+        # Number of rooms
+        self.rooster = np.full((DAY_DURATION, model.num_agents), self.model.grid.room_count)
+        """
         rooster where rows are the steps in a day and col are all the agents
-    """
-    def make_day_rooster(self, Model):
+        """
+        
+    def make_day_rooster(self):
         rooster = self.rooster
         for col in range(rooster.shape[1]):
-            if col == 168:
-                x = 1
+
             lectures = 0
             breaks = 0
+
             for row in range(0, rooster.shape[0], DAY_PART_DURATION):
-                for i in range(AMOUNT_OF_ROOMS):
-                    if(i != 21 and lectures < 3 and (rooster[row, :] == i).sum() <= ROOM_CAPACITY):
-                        rooster[row:row+DAY_PART_DURATION, col] = i
+                for room_id in range(self.model.grid.room_count):
+                    room = self.model.grid.get_room_from_id(room_id)
+                    room_capacity = room.get_capacity()
+
+                    if room_id != self.break_room_id and lectures < 3 and (rooster[row, :] == room_id).sum() < room_capacity:
+                        rooster[row:row+DAY_PART_DURATION, col] = room_id
                         lectures += 1
                         break
-                    if (breaks < 1 and i == 20):
-                        rooster[row:row+DAY_PART_DURATION, col] = i
+
+                    if breaks < 1 and room_id == self.break_room_id:
+                        rooster[row:row+DAY_PART_DURATION, col] = room_id
                         breaks += 1
                         break
 

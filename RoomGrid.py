@@ -115,6 +115,15 @@ class LectureRoom:
         self.seats = []
         self.populate_seats()
 
+    def get_capacity(self):
+        """
+        Gets the total number of seats that exist in this room. This does not take any measures or occupancy status into
+        account.
+
+        :return: The total number of seats in this room.
+        """
+        return len(self.seats)
+
     def room_available(self):
         for seat in self.seats:
             if seat.available:
@@ -308,9 +317,21 @@ class RoomGrid(MultiGrid):
         room = self.get_room(x, y)
         return None if room is None else room.get_portrayal(x, y)
 
+    def get_room_from_id(self, room_id):
+        """
+        Gets the room with the given ID.
+
+        :param room_id: The ID of the room to get.
+        :return: The room with the given ID if it exists, otherwise None.
+        """
+        if room_id >= self.room_count:
+            return None
+        return self.rooms_list[room_id]
+
     def get_room(self, x, y):
         """
         Gets the room at a given point. Note that this does include the walls!
+
         :param x: The x-coordinate to check.
         :param y: The y-coordinate to check.
         :return: The room at the given coordinates, if one such room could be found. Otherwise None.
