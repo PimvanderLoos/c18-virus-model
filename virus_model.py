@@ -290,7 +290,7 @@ class VirusAgent(Agent):
 class VirusModel(Model):
     """A model with some number of agents."""
 
-    def __init__(self, num_agents, grid_width, grid_height, base_infection_chance, spread_distance, spread_chance,
+    def __init__(self, num_rooms, num_agents, grid_width, grid_height, base_infection_chance, spread_distance, spread_chance,
                  daily_testing_chance, choice_of_measure, *args, **kwargs):
         """
         Initializes a new Virus Model.
@@ -304,7 +304,7 @@ class VirusModel(Model):
         :param choice_of_measure: Which measures to enable to attempt to prevent the spread of the virus.
         """
         super().__init__(*args, **kwargs)
-
+        self.num_rooms = num_rooms
         self.num_agents = num_agents
         self.base_infection_chance = base_infection_chance
         """
@@ -318,7 +318,7 @@ class VirusModel(Model):
         """
 
         self.schedule = RandomActivation(self)
-        self.grid = RoomGrid(grid_width, grid_height, False, room_count=10)
+        self.grid = RoomGrid(grid_width, grid_height, False, num_rooms)
         self.running = True
         self.day = 0
         self.total_steps = 0
@@ -341,6 +341,7 @@ class VirusModel(Model):
 
         self.daily_testing_chance = daily_testing_chance
         self.choice_of_measure = choice_of_measure
+        self.grid.room_count = self.num_rooms
 
         # Create agents
         for uid in range(self.num_agents):
@@ -521,6 +522,7 @@ time_element = TimeElement()
 grid_width = 100
 grid_height = 100
 num_agents = 800
+num_rooms = 10
 
 # Includes adjustable sliders for the user in the visualization        
 model_params = {
@@ -536,7 +538,8 @@ model_params = {
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)", 2, 1, 10, 1),
     "spread_chance": UserSettableParameter("slider", "Spread probability", 8, 1, 100, 1),
     "daily_testing_chance": UserSettableParameter("slider", "Daily probability of getting tested per agent", 10, 1, 100,
-                                                  1)
+                                                  1),
+    "num_rooms": UserSettableParameter("slider", "Number of rooms", num_rooms, 3, 30, 1)
 }
 
 grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)

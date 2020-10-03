@@ -224,7 +224,7 @@ class LectureRoom:
 
 
 class RoomGrid(MultiGrid):
-    def __init__(self, width: int, height: int, torus: bool, room_count=20, room_size=15):
+    def __init__(self, width: int, height: int, torus: bool, room_count, room_size=15):
         """
          :param room_count: The number of rooms (excluding break room).
          :param room_size: The size of each regular room (excluding break room).
