@@ -41,10 +41,9 @@ class VirusAgent(Agent):
         self.in_lecture = False
         self.agent_id = unique_id
         self.day_time = 0
-        self.rooster_agent = Rooster_agent(self, model)
+        self.rooster_agent = RoosterAgent(self, model)
         self.room = None
         self.seat = None
-        self.rooster_agent.get_rooster(model)
 
         """
         The day rooster where the agent will sit or walk.
@@ -219,10 +218,7 @@ class VirusAgent(Agent):
         :param room_rooster_id: The ID of the room they should be in. If they are not already there,
                                 they will have to move. Special ID 20 means that they are free to move around.
         """
-        next_in_lecture = room_rooster_id != 20
-
-        # print(room_rooster_id)
-        # print("in lecture? {}".format(self.in_lecture))
+        next_in_lecture = room_rooster_id != self.model.rooster_model.break_room_id
 
         # If they are already in the room they are supposed to be in, do nothing.
         if self.room is not None and self.room.room_id == room_rooster_id:
@@ -237,6 +233,8 @@ class VirusAgent(Agent):
 
         # If their lecture has ended, move them to a random position.
         elif self.in_lecture and not next_in_lecture:
+            self.room = None
+            self.seat = None
             self.move_to_random_position()
 
         self.in_lecture = next_in_lecture
@@ -247,9 +245,7 @@ class VirusAgent(Agent):
             self.day_time += 1
             return
 
-        # Out of bounds after step 32.
-        step = self.model.day_step
-        room_rooster_id = self.rooster_agent.rooster[step]
+        room_rooster_id = self.rooster_agent.rooster[self.model.day_step]
         self.do_rooster_step(room_rooster_id)
 
         # Free to move around wherever they want! Just not in the rooms.
@@ -284,16 +280,22 @@ class VirusModel(Model):
         self.day = 0
         self.total_steps = 0
         self.day_step = 0
-        self.rooster_model = Rooster_model(self)
+        """
+        The number of ticks that have passed in any given day. This value is therefore always between [0, DAY_DURATION]
+        """
+
+        self.rooster_model = RoosterModel(self)
         self.rooster_model.make_day_rooster()
         """
         Describes the 'total' number of steps taken by the model so far, including the virtual 'night' steps.
         """
+
         self.virtual_steps = 0
         """
         Describes the number of 'virtual' steps taken by the model. These are the skipped steps that represent the
         'night'.
         """
+
         self.daily_testing_chance = daily_testing_chance
         self.choice_of_measure = choice_of_measure
 
@@ -316,8 +318,7 @@ class VirusModel(Model):
             agent_reporters={"Position": "pos"})
 
     def set_day_step(self):
-        full_day = 24*4
-        self.day_step = (self.total_steps % full_day)
+        self.day_step = (self.total_steps % DAY_DURATION)
 
     def clear_rooms(self):
         for room in self.grid.rooms_list:
@@ -344,7 +345,6 @@ class VirusModel(Model):
             self.next_day()
 
         '''Advance the model by one step.'''
-                
         self.schedule.step()
 
         self.total_steps = self.schedule.steps + self.virtual_steps

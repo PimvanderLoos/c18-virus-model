@@ -17,25 +17,25 @@ AMOUNT_OF_ROOMS = 21
 LECTURES_PER_DAY = 3
 AMOUNT_OF_AGENTS = 800
 
-class Rooster_agent:
-    def __init__(self, Agent, Model):
+class RoosterAgent:
+    def __init__(self, agent, model):
         """
-            Steps at the beginning of the day is needed to find out at which time the agent is in the day.
+        Steps at the beginning of the day is needed to find out at which time the agent is in the day.
         """
         self.rooster = []
-        self.agent_id = Agent.agent_id
+        self.agent_id = agent.agent_id
+        self.model = model
+        self.rooster = self.model.rooster_model.rooster[:, self.agent_id]
 
-    def get_rooster(self, model):
-        self.rooster = model.rooster_model.rooster[:, self.agent_id]
-
-    def new_day(self, DAY_DURATION, model):
+    def new_day(self, day_duration, model):
+        # pass
         rooster = []
-        for i in range(int(DAY_DURATION/DAY_PART_DURATION)):
+        for i in range(int(day_duration / DAY_PART_DURATION)):
             for j in range(DAY_PART_DURATION):
                 room = self.get_available_room(model)
                 seat = self.get_seat(room)
                 """
-                    step is the time of the day.
+                step is the time of the day.
                 """
                 step = i+j
                 self.rooster.append((room, seat, step))
@@ -53,7 +53,7 @@ class Rooster_agent:
                 return seat
 
 
-class Rooster_model:
+class RoosterModel:
     def __init__(self, model):
         self.model = model
 
@@ -62,10 +62,10 @@ class Rooster_model:
         The ID of the 'break' room. I.e. the room where agents go to if they don't have any lectures.
         """
 
-        # Number of rooms
-        self.rooster = np.full((DAY_DURATION, model.num_agents), self.model.grid.room_count)
+        self.rooster = np.full((DAY_DURATION, model.num_agents), self.break_room_id)
         """
-        rooster where rows are the steps in a day and col are all the agents
+        Rooster where rows are the steps in a day and col are all the agents.
+        Defaults to the break room.
         """
         
     def make_day_rooster(self):
@@ -89,5 +89,3 @@ class Rooster_model:
                         rooster[row:row+DAY_PART_DURATION, col] = room_id
                         breaks += 1
                         break
-
-
