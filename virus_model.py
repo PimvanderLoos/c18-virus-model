@@ -536,7 +536,9 @@ model_params = {
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)", 2, 1, 10, 1),
     "spread_chance": UserSettableParameter("slider", "Spread probability", 8, 1, 100, 1),
     "daily_testing_chance": UserSettableParameter("slider", "Daily probability of getting tested per agent", 10, 1, 100,
-                                                  1)
+                                                  1),
+    "legend": UserSettableParameter('static_text',
+                                         value="Green dot: healthy agent. <br> Blue dot: infected agent. <br> Red dot: infectious agent. <br> Bright purple dot: testable agent. <br> Grey square: wall. <br> Red square: classroom seat. <br> White square: space where the agent can move.")
 }
 
 grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
@@ -582,5 +584,5 @@ server = ModularServer(VirusModel,
                        "Virus Model",
                        model_params)
 
-server.port = 8529
+server.port = 8531
 server.launch()
