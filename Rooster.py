@@ -76,6 +76,5 @@ class Rooster_model:
                         rooster[row:row+DAY_PART_DURATION, col] = i
                         breaks += 1
                         break
-        print("bug stop")
 
 

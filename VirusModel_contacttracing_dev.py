@@ -40,8 +40,8 @@ class VirusAgent(Agent):
         self.agent_id = unique_id
         self.day_time = 0
         self.rooster_agent = Rooster_agent(self, model)
-        self.room = 0
-        self.seat = 0
+        self.room = None
+        self.seat = None
         self.rooster_agent.get_rooster(model)
 
         """
@@ -116,14 +116,11 @@ class VirusAgent(Agent):
         other_agent.virus.infect(self.model.spread_chance, self.model.day)
 
     def set_room(self):
-        room_id = self.rooster_agent.rooster[0]
+        room_id = self.rooster_agent.rooster[0]  # What does this do?
         self.room = self.model.grid.rooms_list[room_id]
-        print("bug st")
 
     def set_seat(self):
         for seat in self.room.seats:
-            if self.agent_id == 531:
-                print("bug stop")
             if seat.available == True:
                 seat.available = False
                 new_position = (seat.x, seat.y)
@@ -200,13 +197,49 @@ class VirusAgent(Agent):
                     other_agent.df_contacts = other_agent.df_contacts.append({"unique_id": self.unique_id, "time_contact":self.model.day},
                                                                ignore_index=True)
                     other_agent.df_contacts = other_agent.df_contacts.groupby("unique_id").max().reset_index()
-                
 
-    def get_present_room(self):
-        rooster = self.rooster.rooster[self.day_time]
-        return rooster
+    def move_to_random_position(self):
+        """
+        Moves this agent to a random position on the grid. Note that only 'valid' positions are considered
+        (see RoomGrid#is_available(int, int, False).
+        """
+        (pos_x, pos_y) = self.model.grid.get_random_pos(self.random)
 
+        # If the agent doesn't exist on the grid at the moment, place them.
+        # Otherwise, move them. This is required, because move has to remove the agent
+        # From the grid in the old position, which will cause an NPE if it doesn't exist.
+        if self.pos is None:
+            self.model.grid.place_agent(self, (pos_x, pos_y))
+        else:
+            self.model.grid.move_agent(self, (pos_x, pos_y))
 
+    def do_rooster_step(self, room_rooster_id):
+        """
+        Takes care of whatever the agent has to do this step according to their schedule/rooster.
+        :param room_rooster_id: The ID of the room they should be in. If they are not already there,
+                                they will have to move. Special ID 20 means that they are free to move around.
+        """
+        next_in_lecture = room_rooster_id != 20
+
+        # print(room_rooster_id)
+        # print("in lecture? {}".format(self.in_lecture))
+
+        # If they are already in the room they are supposed to be in, do nothing.
+        if self.room is not None and self.room.room_id == room_rooster_id:
+            # Nothing needs to happen, so just pass. It doesn't return to
+            # make sure that self.in_lecture is properly updated at the end.
+            pass
+
+        # If they have to be in a (different) lecture next, move them.
+        elif next_in_lecture:
+            self.room = self.model.grid.rooms_list[room_rooster_id]
+            self.set_seat()
+
+        # If their lecture has ended, move them to a random position.
+        elif self.in_lecture and not next_in_lecture:
+            self.move_to_random_position()
+
+        self.in_lecture = next_in_lecture
 
     def step(self):
         # No zombies allowed
@@ -214,29 +247,26 @@ class VirusAgent(Agent):
             self.day_time += 1
             return
 
-
         step = self.model.day_step
         room_rooster_id = self.rooster_agent.rooster[step]
-        if room_rooster_id != 20:
-            self.in_lecture = True
-        else:
-            self.in_lecture = False
+        self.do_rooster_step(room_rooster_id)
 
-        if room_rooster_id != self.room.room_id: #switch to different room
-                if room_rooster_id == 20:
-                    (pos_x, pos_y) = self.model.grid.get_random_pos(self.random)
-                    self.model.grid.place_agent(self, (pos_x, pos_y))
-                else:
-                    new_room = self.model.grid.rooms_list[room_rooster_id]
-                    self.room = new_room
-                    self.set_seat()
-        print("bug stop")
+        # Debug shit, feel free to ignore it.
+        # Basically, some agents are rendered outside of rooms while they should be inside them.
+        # Perhaps they are simply duplicated? More debugging required.
+        # I think there might be a setposition instead of move somewhere in the init.
+        if self.pos[0] > 90:
+            if self.room is not None:
+                print("Found agent {} at pos: [{} {}]. In lecture? {}. RoomID: {}".format(self.unique_id, self.pos[0], self.pos[1], self.in_lecture, self.room.room_id))
+            else:
+                print("Found agent {} at pos: [{} {}]. In lecture? {}. NOT IN A ROOM!".format(self.unique_id, self.pos[0], self.pos[1], self.in_lecture))
 
-
-
+        # Free to move around wherever they want! Just not in the rooms.
+        if not self.in_lecture:
+            self.move()
 
         if not self.virus.is_infectious():
-            self.day_time  += 1
+            self.day_time += 1
             return
 
         for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=self.model.spread_distance, moore=True):
@@ -245,9 +275,6 @@ class VirusAgent(Agent):
         if self.model.choice_of_measure == 'Contact Tracing':
             self.trace_contact()
         self.day_time += 1
-
-
-
 
 
 class VirusModel(Model):
@@ -331,6 +358,7 @@ class VirusModel(Model):
         self.schedule.step()
 
         self.total_steps = self.schedule.steps + self.virtual_steps
+
 
 def agent_portrayal(agent):
     if agent.quarantine or agent.virus.disease_state is DiseaseState.DECEASED:
