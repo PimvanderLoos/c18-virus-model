@@ -17,6 +17,7 @@ AMOUNT_OF_ROOMS = 21
 LECTURES_PER_DAY = 3
 AMOUNT_OF_AGENTS = 800
 
+
 class RoosterAgent:
     def __init__(self, agent, model):
         """
@@ -42,10 +43,10 @@ class RoosterAgent:
                 self.steps_at_beginning_day = model.total_steps
 
     def get_available_room(self, model):
-        for row in range(model.grid.rooms[:][0].size):
-            for col in range(model.grid.rooms[0][:].size):
-                if model.grid.rooms[row][col].room_available():
-                    return model.grid.rooms[row][col]
+        for room in self.model.grid.rooms_list:
+            if room.room_available():
+                return room
+        return None
 
     def get_seat(self, room):
         for seat in room.seats:
@@ -67,25 +68,40 @@ class RoosterModel:
         Rooster where rows are the steps in a day and col are all the agents.
         Defaults to the break room.
         """
+
+        self.schedule_count = 6
+
+    def get_random_room_id(self):
+        room_id = self.model.random.randrange(self.model.grid.room_count + 1)
+        if room_id == self.break_room_id:
+            return room_id, None
+
+        room = self.model.grid.rooms_list[room_id]
+
+        if not room.room_available():
+            return self.get_random_room_id()
+
+        room.is_reserved = True
+        return room_id, room
         
     def make_day_rooster(self):
         rooster = self.rooster
-        for col in range(rooster.shape[1]):
+        for agentID in range(rooster.shape[1]):
 
             lectures = 0
             breaks = 0
 
-            for row in range(0, rooster.shape[0], DAY_PART_DURATION):
-                for room_id in range(self.model.grid.room_count):
-                    room = self.model.grid.get_room_from_id(room_id)
-                    room_capacity = room.get_capacity()
+            for timeslot in range(0, rooster.shape[0], DAY_PART_DURATION):
+                for schedule_id in range(self.model.grid.room_count):
+                    room_id, room = self.get_random_room_id()
+                    room_capacity = 999999 if room is None else room.get_capacity()
 
-                    if room_id != self.break_room_id and lectures < 3 and (rooster[row, :] == room_id).sum() < room_capacity:
-                        rooster[row:row+DAY_PART_DURATION, col] = room_id
+                    if room_id != self.break_room_id and lectures < 3 and (rooster[timeslot, :] == room_id).sum() < room_capacity:
+                        rooster[timeslot:timeslot+DAY_PART_DURATION, agentID] = room_id
                         lectures += 1
                         break
 
                     if breaks < 1 and room_id == self.break_room_id:
-                        rooster[row:row+DAY_PART_DURATION, col] = room_id
+                        rooster[timeslot:timeslot+DAY_PART_DURATION, agentID] = room_id
                         breaks += 1
                         break

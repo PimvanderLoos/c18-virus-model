@@ -87,6 +87,11 @@ class VirusAgent(Agent):
             moore=True,
             include_center=False,
             radius=1)
+        if len(possible_steps) == 0:
+            print("Failed to find position for agent {}: Current position: [{} {}]".format(
+                self.unique_id, self.pos[0], self.pos[1]))
+            return
+
         new_position = self.random.choice(possible_steps)
 
         self.model.grid.move_agent(self, new_position)
@@ -118,16 +123,41 @@ class VirusAgent(Agent):
 
     def set_room(self):
         room_id = self.rooster_agent.rooster[0]  # What does this do?
-        self.room = self.model.grid.rooms_list[room_id]
+        if room_id == self.model.rooster_model.break_room_id:
+            self.room = None
+        else:
+            self.room = self.model.grid.rooms_list[room_id]
 
-    def set_seat(self):
-        for seat in self.room.seats:
-            if seat.available:
-                seat.available = False
-                new_position = (seat.x, seat.y)
-                self.model.grid.move_agent(self, new_position)
-                self.seat = seat
-                break
+    def set_seat(self, random=True):
+        if self.room is None:
+            self.seat = None
+            return
+
+        if random:
+            threshold = self.room.get_capacity() / 4
+            """
+            At which point we'll abandon the idea of randomly assigning agents to seats, as it'll take too long and 
+            becomes less and less important.
+            """
+
+            available_seat_count = sum([seat.available for seat in self.room.seats])
+            if available_seat_count < threshold:
+                random = False
+
+            found_seat = self.room.seats[0]
+            while not found_seat.available:
+                found_seat = self.room.seats[self.model.random.randrange(self.room.get_capacity())]
+
+        if not random:
+            for seat in self.room.seats:
+                if seat.available:
+                    found_seat = seat
+                    break
+
+        found_seat.available = False
+        new_position = (found_seat.x, found_seat.y)
+        self.model.grid.move_agent(self, new_position)
+        self.seat = found_seat
 
     def new_day(self, day, model):
         """
@@ -220,6 +250,9 @@ class VirusAgent(Agent):
         """
         next_in_lecture = room_rooster_id != self.model.rooster_model.break_room_id
 
+        if self.unique_id == 10:
+            print("room_rooster_id: {}".format(room_rooster_id))
+
         # If they are already in the room they are supposed to be in, do nothing.
         if self.room is not None and self.room.room_id == room_rooster_id:
             # Nothing needs to happen, so just pass. It doesn't return to
@@ -275,7 +308,7 @@ class VirusModel(Model):
         self.spread_distance = spread_distance
         self.spread_chance = spread_chance
         self.schedule = RandomActivation(self)
-        self.grid = RoomGrid(grid_width, grid_height, False)
+        self.grid = RoomGrid(grid_width, grid_height, False, room_count=10)
         self.running = True
         self.day = 0
         self.total_steps = 0
@@ -322,6 +355,7 @@ class VirusModel(Model):
 
     def clear_rooms(self):
         for room in self.grid.rooms_list:
+            room.is_reserved = False
             for seat in room.seats:
                 seat.available = True
 

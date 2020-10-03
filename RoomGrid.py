@@ -72,6 +72,7 @@ class LectureRoom:
         self.x_max = x_max
         self.y_max = y_max
         self.entry_side = entry_side
+        self.is_reserved = False
 
         if entry_side == Side.NORTH:
             self.x_entry = x_min + math.floor((x_max - x_min) / 2)
