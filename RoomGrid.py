@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Iterator, List
 
 from mesa.space import MultiGrid, Coordinate
 from enum import Enum
@@ -107,10 +107,10 @@ class LectureRoom:
         x_max_seat_offset = entry_side_offset if self.entry_side == Side.EAST else 0
         y_max_seat_offset = entry_side_offset if self.entry_side == Side.NORTH else 0
 
-        self.x_min_seat = self.x_min + 1 + x_min_seat_offset
-        self.x_max_seat = self.x_max - 1 - x_max_seat_offset
-        self.y_min_seat = self.y_min + 1 + y_min_seat_offset
-        self.y_max_seat = self.y_max - 1 - y_max_seat_offset
+        self.x_min_seat = self.x_min + 2 + x_min_seat_offset
+        self.x_max_seat = self.x_max - 2 - x_max_seat_offset
+        self.y_min_seat = self.y_min + 2 + y_min_seat_offset
+        self.y_max_seat = self.y_max - 2 - y_max_seat_offset
 
         self.seats = []
         self.populate_seats()
@@ -131,11 +131,9 @@ class LectureRoom:
         return self.x_min < x < self.x_max and self.y_min < y < self.y_max
 
     def populate_seats(self):
-        for x in range(self.x_min_seat, self.x_max_seat):
-            for y in range(self.y_min_seat, self.y_max_seat):
-                # Add x/y_min to convert the values too global coords and 1 because of the empty space
-                # Between the wall and the seats.
-                self.seats.append(Seat(self.x_min + 1 + x, self.y_min + 1 + y))
+        for x in range(self.x_min_seat, self.x_max_seat + 1):
+            for y in range(self.y_min_seat, self.y_max_seat + 1):
+                self.seats.append(Seat(x, y))
 
     def is_wall(self, x, y):
         """
@@ -163,7 +161,7 @@ class LectureRoom:
         :param y: The y-coordinate.
         :return: True if the given position is a seat.
         """
-        return self.x_min_seat < x < self.x_max_seat and self.y_min_seat < y < self.y_max_seat
+        return self.x_min_seat <= x <= self.x_max_seat and self.y_min_seat <= y <= self.y_max_seat
 
     def is_entry(self, x, y):
         """
@@ -299,7 +297,9 @@ class RoomGrid(MultiGrid):
         if room is None:
             return True
 
-        return allowed_in_rooms or room.is_available(x, y)
+        if allowed_in_rooms:
+            return not room.is_wall(x, y)
+        return room.is_available(x, y)
 
     def get_portrayal(self, x, y):
         if self.is_edge(x, y):
@@ -358,12 +358,43 @@ class RoomGrid(MultiGrid):
             pos_y = random.randrange(self.height)
         return pos_x, pos_y
 
+    def get_neighborhood(
+            self,
+            pos: Coordinate,
+            moore: bool,
+            include_center: bool = False,
+            radius: int = 1,
+            allowed_in_rooms: bool = False,
+    ) -> List[Coordinate]:
+        """ Return a list of cells that are in the neighborhood of a
+        certain point.
+
+        Args:
+            pos: Coordinate tuple for the neighborhood to get.
+            moore: If True, return Moore neighborhood
+                   (including diagonals)
+                   If False, return Von Neumann neighborhood
+                   (exclude diagonals)
+            include_center: If True, return the (x, y) cell as well.
+                            Otherwise, return surrounding cells only.
+            radius: radius, in cells, of neighborhood to get.
+            allowed_in_rooms: True to allow the agents to walk around freely inside the rooms.
+
+        Returns:
+            A list of coordinate tuples representing the neighborhood;
+            With radius 1, at most 9 if Moore, 5 if Von Neumann (8 and 4
+            if not including the center).
+
+        """
+        return list(self.iter_neighborhood(pos, moore, include_center, radius, allowed_in_rooms))
+
     def iter_neighborhood(
             self,
             pos: Coordinate,
             moore: bool,
             include_center: bool = False,
             radius: int = 1,
+            allowed_in_rooms: bool = False,
     ) -> Iterator[Coordinate]:
         """ Return an iterator over cell coordinates that are in the
         neighborhood of a certain point.
@@ -377,6 +408,7 @@ class RoomGrid(MultiGrid):
             include_center: If True, return the (x, y) cell as well.
                             Otherwise, return surrounding cells only.
             radius: radius, in cells, of neighborhood to get.
+            allowed_in_rooms: True to allow the agents to walk around freely inside the rooms.
 
         Returns:
             A list of coordinate tuples representing the neighborhood. For
@@ -403,7 +435,7 @@ class RoomGrid(MultiGrid):
                 px, py = self.torus_adj((x + dx, y + dy))
 
                 # Skip if new coords out of bounds or not available.
-                if self.out_of_bounds((px, py)) or not self.is_available(px, py):
+                if self.out_of_bounds((px, py)) or not self.is_available(px, py, allowed_in_rooms):
                     continue
 
                 coords = (px, py)
