@@ -86,7 +86,7 @@ class Virus:
         :return: True if the test returned positive.
         """
         return (self.disease_state == DiseaseState.SYMPTOMATIC or
-               (self.disease_state >= DiseaseState.TESTABLE and self.random.randrange(0, 10) < test_accuracy))
+                (self.disease_state >= DiseaseState.TESTABLE and self.random.randrange(0, 10) < test_accuracy))
 
     def handle_disease_progression(self, day):
         """

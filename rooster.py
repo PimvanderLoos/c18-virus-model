@@ -1,14 +1,4 @@
-from mesa import Agent, Model
-from mesa.time import RandomActivation
-from mesa.space import MultiGrid
-from mesa.datacollection import DataCollector
-from mesa.visualization.modules import CanvasGrid, ChartModule
-from mesa.visualization.ModularVisualization import ModularServer
-import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
-import numpy as np
-from CanvasRoomGrid import *
-from RoomGrid import *
+from room_grid import *
 
 DAY_PARTS = 4
 DAY_PART_DURATION = 8  # steps to make 2 hours
@@ -30,7 +20,6 @@ class RoosterAgent:
 
     def new_day(self, day_duration, model):
         # pass
-        rooster = []
         for i in range(int(day_duration / DAY_PART_DURATION)):
             for j in range(DAY_PART_DURATION):
                 room = self.get_available_room(model)
@@ -69,8 +58,6 @@ class RoosterModel:
         Defaults to the break room.
         """
 
-        self.schedule_count = 6
-
     def get_random_room_id(self):
         room_id = self.model.random.randrange(self.model.grid.room_count + 1)
         if room_id == self.break_room_id:
@@ -86,7 +73,7 @@ class RoosterModel:
         
     def make_day_rooster(self):
         rooster = self.rooster
-        for agentID in range(rooster.shape[1]):
+        for agent_id in range(rooster.shape[1]):
 
             lectures = 0
             breaks = 0
@@ -97,11 +84,11 @@ class RoosterModel:
                     room_capacity = 999999 if room is None else room.get_capacity()
 
                     if room_id != self.break_room_id and lectures < 3 and (rooster[timeslot, :] == room_id).sum() < room_capacity:
-                        rooster[timeslot:timeslot+DAY_PART_DURATION, agentID] = room_id
+                        rooster[timeslot:timeslot+DAY_PART_DURATION, agent_id] = room_id
                         lectures += 1
                         break
 
                     if breaks < 1 and room_id == self.break_room_id:
-                        rooster[timeslot:timeslot+DAY_PART_DURATION, agentID] = room_id
+                        rooster[timeslot:timeslot+DAY_PART_DURATION, agent_id] = room_id
                         breaks += 1
                         break

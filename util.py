@@ -1,6 +1,3 @@
-import math
-
-
 def get_line_between_points(x_0, y_0, x_1, y_1):
     """ Gets a line between two coordinate pairs represented by a list of tuple[x, y].
     The line is found using Bresenham's line algorithm.

@@ -1,10 +1,11 @@
+import math
 from typing import Iterator, List
 
 from mesa.space import MultiGrid, Coordinate
 from enum import Enum
 import numpy as np
 
-from Util import *
+from util import *
 
 
 def get_square():
