@@ -524,6 +524,8 @@ num_agents = 800
 
 # Includes adjustable sliders for the user in the visualization        
 model_params = {
+    "Description": UserSettableParameter('static_text',
+                                         value="This simulation model represents a university building in which agents (students) attend lectures.."),
     "static_text": UserSettableParameter('static_text',
                                          value="The options below allow you to adjust the parameter settings. After setting the options to the desired values, click 'Reset' and restart the simulation."),
     "choice_of_measure": UserSettableParameter('choice', 'Mitigation measure applied', value='No measures',
@@ -584,5 +586,5 @@ server = ModularServer(VirusModel,
                        "Virus Model",
                        model_params)
 
-server.port = 8531
+server.port = 8535
 server.launch()
