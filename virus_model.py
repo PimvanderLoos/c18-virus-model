@@ -116,6 +116,7 @@ class VirusAgent(Agent):
         if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
             return
 
+        print(self.model.spread_chance)
         other_agent.virus.infect(self.model.spread_chance, self.model.day)
 
     def set_room(self):
@@ -536,7 +537,12 @@ num_agents = 800
 model_params = {
     "Description": UserSettableParameter('static_text',
                                          value="This simulation model represents a university building in "
-                                               "which agents (students) attend lectures."),
+                                               "which agents (students) attend lectures in classrooms. It "
+                                               "simulates the spread of a virus in the building. The plots "
+                                               "below the main visualization show the spread of the virus. "
+                                               "For the most informative results, please run the model for "
+                                               "at least 5 days, when the first infected agents are infectious "
+                                               "and the virus starts to spread."),
     "static_text": UserSettableParameter('static_text',
                                          value="The options below allow you to adjust the parameter settings. "
                                                "After setting the options to the desired values, "
@@ -553,13 +559,14 @@ model_params = {
     "daily_testing_chance": UserSettableParameter("slider", "Daily probability of getting tested per agent", 10, 1, 100,
                                                   1),
     "legend": UserSettableParameter('static_text',
-                                    value="Green dot: healthy agent. <br> "
+                                    value="<b>Legend</b> <br> "
+                                          "Green dot: healthy agent. <br> "
                                           "Blue dot: infected agent. <br> "
                                           "Red dot: infectious agent. <br> "
                                           "Bright purple dot: testable agent. <br> "
                                           "Grey square: wall. <br> "
                                           "Red square: classroom seat. <br> "
-                                          "White square: space where the agent can move.")
+                                          "White square: space where the agent can move. ")
 }
 
 grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
@@ -605,5 +612,5 @@ server = ModularServer(VirusModel,
                        "Virus Model",
                        model_params)
 
-server.port = 8536
+server.port = 8541
 server.launch()
