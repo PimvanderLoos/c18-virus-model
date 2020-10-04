@@ -522,12 +522,15 @@ grid_width = 100
 grid_height = 100
 num_agents = 800
 
-# Includes adjustable sliders for the user in the visualization        
+# Includes adjustable sliders for the user in the visualization
 model_params = {
     "Description": UserSettableParameter('static_text',
-                                         value="This simulation model represents a university building in which agents (students) attend lectures.."),
+                                         value="This simulation model represents a university building in "
+                                               "which agents (students) attend lectures."),
     "static_text": UserSettableParameter('static_text',
-                                         value="The options below allow you to adjust the parameter settings. After setting the options to the desired values, click 'Reset' and restart the simulation."),
+                                         value="The options below allow you to adjust the parameter settings. "
+                                               "After setting the options to the desired values, "
+                                               "click 'Reset' and restart the simulation."),
     "choice_of_measure": UserSettableParameter('choice', 'Mitigation measure applied', value='No measures',
                                                choices=['No measures', 'Contact Tracing']),
     # "contacttracing_option": UserSettableParameter('checkbox', 'Measure: Contact Tracing', value=True),
@@ -540,7 +543,13 @@ model_params = {
     "daily_testing_chance": UserSettableParameter("slider", "Daily probability of getting tested per agent", 10, 1, 100,
                                                   1),
     "legend": UserSettableParameter('static_text',
-                                         value="Green dot: healthy agent. <br> Blue dot: infected agent. <br> Red dot: infectious agent. <br> Bright purple dot: testable agent. <br> Grey square: wall. <br> Red square: classroom seat. <br> White square: space where the agent can move.")
+                                    value="Green dot: healthy agent. <br> "
+                                          "Blue dot: infected agent. <br> "
+                                          "Red dot: infectious agent. <br> "
+                                          "Bright purple dot: testable agent. <br> "
+                                          "Grey square: wall. <br> "
+                                          "Red square: classroom seat. <br> "
+                                          "White square: space where the agent can move.")
 }
 
 grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
