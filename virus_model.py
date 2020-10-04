@@ -12,6 +12,16 @@ from room_grid import RoomGrid
 from rooster import *
 from virus import *
 
+""" TODO list
+Things we still want to program:
+- Change the values for the parameters to more realistic, literature-based values. 
+- Next to night-time, also remove weekends from the visualization in the simulation.
+- Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
+- Add a slider for the number of classrooms and the size of each classroom.
+- Possible addition: add other types of rooms next to lecture rooms, e.g. break room or lab rooms. These would have a different mapping compared to lecture rooms.
+- Possible addition: next to contact tracing, more possible mitigation measures: such as social distancing or having a % of agents wearing face masks.
+"""
+
 DAY_DURATION = 8 * 4
 """
 The number of ticks that fit into a day. Remember that every tick is 15 minutes, so 8 * 4 ticks = 8 hours.
@@ -586,5 +596,5 @@ server = ModularServer(VirusModel,
                        "Virus Model",
                        model_params)
 
-server.port = 8535
+server.port = 8536
 server.launch()
