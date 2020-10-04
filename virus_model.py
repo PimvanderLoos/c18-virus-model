@@ -16,6 +16,7 @@ from virus import *
 Things we still want to program:
 - Change the values for the parameters to more realistic, literature-based values. 
 - Next to night-time, also remove weekends from the visualization in the simulation.
+- Instead of a base infection probability, have a deterministic number of agents being infected at first. This allows for running experiments with the same starting state.
 - Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
 - Add a slider for the number of classrooms and the size of each classroom.
 - Possible addition: add other types of rooms next to lecture rooms, e.g. break room or lab rooms. These would have a different mapping compared to lecture rooms.
@@ -66,8 +67,7 @@ class VirusAgent(Agent):
         """
         Keeps track of the day when tested
         """
-        #        self.day_start_testable = np.inf
-        #        self.days_testable = 0
+
         self.df_contacts = pd.DataFrame(columns=["unique_id", "time_contact"])
         """
         Traces the last contact to each other agent
@@ -539,10 +539,7 @@ model_params = {
                                          value="This simulation model represents a university building in "
                                                "which agents (students) attend lectures in classrooms. It "
                                                "simulates the spread of a virus in the building. The plots "
-                                               "below the main visualization show the spread of the virus. "
-                                               "For the most informative results, please run the model for "
-                                               "at least 5 days, when the first infected agents are infectious "
-                                               "and the virus starts to spread."),
+                                               "below the main visualization show the spread of the virus. "),
     "static_text": UserSettableParameter('static_text',
                                          value="The options below allow you to adjust the parameter settings. "
                                                "After setting the options to the desired values, "
@@ -612,5 +609,5 @@ server = ModularServer(VirusModel,
                        "Virus Model",
                        model_params)
 
-server.port = 8541
+server.port = 8543
 server.launch()

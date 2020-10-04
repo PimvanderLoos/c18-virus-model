@@ -48,7 +48,7 @@ class Virus:
         """
         self.random = random
         if random.randrange(0, 100) < base_infection_chance:
-            self.disease_state = DiseaseState.INFECTED
+            self.disease_state = DiseaseState.INFECTIOUS
         else:
             self.disease_state = DiseaseState.HEALTHY
 
