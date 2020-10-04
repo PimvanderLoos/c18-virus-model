@@ -1,13 +1,13 @@
 from enum import Enum
 from functools import total_ordering
 
-DISEASE_PROGRESSION_TO_TESTABLE = 3
+DISEASE_PROGRESSION_TO_TESTABLE = 4
 """
 The number of days after the initial infection after which an agent shows up positive on tests.
 (See: `Virus.DiseaseState.TESTABLE`).
 """
 
-DISEASE_PROGRESSION_TO_INFECTIOUS = 3
+DISEASE_PROGRESSION_TO_INFECTIOUS = 1
 """
 The number of days after an agent became testable (see: `DISEASE_PROGRESSION_TO_TESTABLE`) after which an agent becomes
 infectious. (See: `Virus.DiseaseState.INFECTIOUS`).
@@ -30,7 +30,7 @@ RECOVERY_COOLDOWN = 9999
 The number of days after which an agent recovered from the disease after which they can get infected again.
 """
 
-DISEASE_LETHALITY = 4
+DISEASE_LETHALITY = 1
 """
 The lethality of the virus, expressed as a percentage (0 - 100) of agents that will die after being infected.
 """
