@@ -8,8 +8,8 @@ from noviz.visualize import Visualizer
 
 parser = argparse.ArgumentParser(description='Run the model using the provided parameters')
 parser.add_argument('input', type=str, help="The output directory for the results")
-parser.add_argument('--show', dest='show', help="Show the plots.", action='store_true')
-parser.add_argument('--write', dest='write', help="Write the plots to files", action='store_true')
+parser.add_argument('--show-plots', dest='show', help="Show the plots.", action='store_true')
+parser.add_argument('--write-plots', dest='write', help="Write the plots to files", action='store_true')
 
 args = parser.parse_args()
 directory = args.input.rstrip(os.sep)

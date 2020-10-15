@@ -22,8 +22,8 @@ parser.add_argument('--spreadDistance', type=int, help="The maximum distance bet
 parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                     default=DEFAULT_DAILY_TEST_CHANCE)
 parser.add_argument('--stepCount', type=int, help="The number of steps to simulate", default=1000)
-parser.add_argument('--show', dest='show', help="Show the plots.", action='store_true')
-parser.add_argument('--write', dest='write', help="Write the plots to files", action='store_true')
+parser.add_argument('--show-plots', dest='show', help="Show the plots.", action='store_true')
+parser.add_argument('--write-plots', dest='write', help="Write the plots to files", action='store_true')
 
 args = parser.parse_args()
 
