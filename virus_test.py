@@ -13,7 +13,7 @@ of days ago, the result will return UNTESTED.
 class TestOutcome(Enum):
     UNTESTED = 1,
     """
-    The agent has not yet been tested. 
+    The agent has not yet been tested.
     """
 
     POSITIVE = 2,
