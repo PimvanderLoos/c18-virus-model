@@ -26,6 +26,17 @@ class TestGetResults(TestTestResult):
         assert self.test_result.get_result(self.result_day + RESULT_ACTIVE_DAY + 1) == TestOutcome.UNTESTED
 
 
+def skip_to_day(virus_test: VirusTest, current, goal):
+    """
+    Skips to a given day for the virus test.
+    :param virus_test: The VirusTest object to progress to the given day.
+    :param current: The current day.
+    :param goal: The goal day (inclusive).
+    """
+    for day in range(current, goal + 1):
+        virus_test.new_day(day)
+
+
 class TestVirusTest(TestCase):
     def setUp(self):
         self.result_delay = 7
@@ -41,24 +52,33 @@ class TestVirusTest(TestCase):
         self.virus_negative = Virus(self.random, 0)
 
 
-def skip_to_day(virus_test: VirusTest, current, goal):
-    """
-    Skips to a given day for the virus test.
-    :param virus_test: The VirusTest object to progress to the given day.
-    :param current: The current day.
-    :param goal: The goal day (inclusive).
-    """
-    for day in range(current, goal + 1):
-        virus_test.new_day(day)
-
-
 class TestDayProgression(TestVirusTest):
     def test_perform_test(self):
+        # Reset?
+        skip_to_day(self.virus_test, 0, 0)
+
         self.virus_test.perform_test(0, self.virus_negative)
         self.virus_test.perform_test(7, self.virus_positive)
         self.virus_test.perform_test(9, self.virus_positive)
 
+    def test_instant_testing(self):
+        # Reset?
+        skip_to_day(self.virus_test, 0, 0)
+
+        old_delay = self.virus_test.result_delay
+        self.virus_test.result_delay = 0
+
+        self.virus_test.perform_test(0, self.virus_negative)
+        assert self.virus_test.get_result(0) == TestOutcome.NEGATIVE
+
+        # Reset old delay. I don't know if this is needed (perhaps this could be tested in a separate class)
+        # But I don't really know how that works in Python, so better safe than sorry.
+        self.virus_test.result_delay = old_delay
+
     def test_new_day(self):
+        # Reset?
+        skip_to_day(self.virus_test, 0, 0)
+
         assert self.virus_test.get_result(0) == TestOutcome.UNTESTED
 
         invalidation_delay = self.virus_test.result_delay + RESULT_ACTIVE_DAY
@@ -93,3 +113,24 @@ class TestDayProgression(TestVirusTest):
         # POSITIVE, because of the test performed the day after the `empty_day`
         skip_to_day(self.virus_test, empty_day, empty_day + 1 + self.result_delay)
         assert self.virus_test.get_result(empty_day + 1 + self.result_delay) == TestOutcome.POSITIVE
+
+    def test_statistics(self):
+        # Reset?
+        skip_to_day(self.virus_test, 0, 0)
+
+        self.virus_test.perform_test(0, self.virus_negative)
+        self.virus_test.perform_test(7, self.virus_positive)
+        self.virus_test.perform_test(9, self.virus_positive)
+
+        assert self.virus_test.get_test_stats().get_pending_count() == 3
+        assert self.virus_test.get_test_stats().get_total_count() == 3
+        assert self.virus_test.get_test_stats().get_positive_count() == 0
+        assert self.virus_test.get_test_stats().get_negative_count() == 0
+
+        skip_to_day(self.virus_test, 0, 9 + self.result_delay)
+        assert self.virus_test.get_test_stats().get_pending_count() == 0
+        assert self.virus_test.get_test_stats().get_total_count() == 3
+        assert self.virus_test.get_test_stats().get_positive_count() == 2
+        assert self.virus_test.get_test_stats().get_negative_count() == 1
+
+

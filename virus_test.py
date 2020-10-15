@@ -67,6 +67,61 @@ class TestResult:
         return self.__result_day
 
 
+class TestStatistics:
+    def __init__(self):
+        self.__total = 0
+        self.__positive = 0
+        self.__negative = 0
+        self.__pending = 0
+
+    def add_test_result(self, outcome: TestOutcome):
+        if outcome == TestOutcome.POSITIVE:
+            self.__positive += 1
+        elif outcome == TestOutcome.NEGATIVE:
+            self.__negative += 1
+        else:
+            raise ValueError("Trying to add test statistic for untested result. This is invalid.")
+        self.__pending -= 1
+
+    def register_new_result(self):
+        self.__pending += 1
+        self.__total += 1
+
+    def get_pending_count(self):
+        """
+        Gets the number of tests whose results are not yet available.
+
+        :return: The number of tests whose results are not yet available.
+        """
+        return self.__pending
+
+    def get_total_count(self):
+        """
+        Gets the total number of tests performed on this VirusTest far.
+
+        This includes the tests whose result is not known yet.
+
+        :return: The total number of tests performed on this VirusTest far.
+        """
+        return self.__total
+
+    def get_positive_count(self):
+        """
+        Gets the total number of tests that returned a positive (= infected) result so far.
+
+        :return: The total number of tests that returned a positive result so far.
+        """
+        return self.__positive
+
+    def get_negative_count(self):
+        """
+        Gets the total number of tests that returned a negative (= not infected) result so far.
+
+        :return: The total number of tests that returned a negative result so far.
+        """
+        return self.__negative
+
+
 class VirusTest:
     def __init__(self, result_delay, random: Random, false_negative_rate=0, false_positive_rate=0):
         """
@@ -81,6 +136,7 @@ class VirusTest:
         self.false_negative_rate = false_negative_rate
         self.false_positive_rate = false_positive_rate
         self.__test_queue = []
+        self.test_stats = TestStatistics()
 
     def new_day(self, day):
         """
@@ -99,13 +155,18 @@ class VirusTest:
 
         for idx in range(0, len(self.__test_queue)):
             test_result = self.__test_queue[idx]
+            test_result_day = test_result.get_result_day()
+
+            if self.result_delay > 0 and test_result_day == day:
+                self.test_stats.add_test_result(test_result.get_raw_result())
+
             # Remove any tests that are no longer useful.
-            if test_result.get_result_day() < invalidation_day:
+            if test_result_day < invalidation_day:
                 start = idx + 1
                 continue
 
             # Always get the latest valid result.
-            if test_result.get_result_day() <= day:
+            if test_result_day <= day:
                 start = idx
         self.__test_queue = self.__test_queue[start:]
 
@@ -140,6 +201,10 @@ class VirusTest:
             else:
                 test_outcome = TestOutcome.NEGATIVE
 
+        self.test_stats.register_new_result()
+        if self.result_delay == 0:
+            self.test_stats.add_test_result(test_outcome)
+
         self.__test_queue.append(TestResult(test_outcome, day + self.result_delay))
 
     def get_test_queue_size(self):
@@ -152,3 +217,12 @@ class VirusTest:
         :return: The number of tests currently queued up.
         """
         return len(self.__test_queue)
+
+    def get_test_stats(self) -> TestStatistics:
+        """
+        Gets the statistics of the tests performed so far.
+
+        :return: The statistics object containing all info regarding the number of tests performed so far as well as
+        their outcomes.
+        """
+        return self.test_stats

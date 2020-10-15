@@ -76,6 +76,14 @@ class Virus:
         """
         return self.disease_state >= DiseaseState.INFECTED
 
+    def is_deceased(self):
+        """
+        Checks if the owner of this Virus is deceased.
+
+        :return: True if the owner of this Virus is deceased.
+        """
+        return self.disease_state == DiseaseState.DECEASED
+
     def is_testable(self):
         """
         Checks if the agent can show up on tests.
