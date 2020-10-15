@@ -1,11 +1,9 @@
 import argparse
 import os
 
+from noviz.constants import MODEL_DATA_PATH
 from noviz.visualize import Visualizer
 from virus_model import *
-
-LOG_PATH = "log.txt"
-MODEL_DATA_PATH = "model.pickle"
 
 # TODO: Accept seed parameter for the Random attribute of the model for reproducible results.
 parser = argparse.ArgumentParser(description='Run the model using the provided parameters')
@@ -36,26 +34,29 @@ if args.stepCount < minimum_step_count:
 directory = args.output.rstrip(os.sep)
 os.makedirs(directory, exist_ok=True)
 
-# TODO: Log this to a file in the output dir.
-print("Running with settings: \n"
-      "Output dir: {}\n"
-      "Num agents: {}\n"
-      "Mitigation: {}\n"
-      "Base infection: {}\n"
-      "Spread chance: {}\n"
-      "Spread distance: {}\n"
-      "Daily test chance: {}\n"
-      "Number of steps: {}\n"
-      "Test delay: {}\n"
-      .format(directory,
-              args.num_agents,
-              args.mitigation,
-              args.baseInfection,
-              args.spreadChance,
-              args.spreadDistance,
-              args.testChance,
-              args.stepCount,
-              args.testDelay))
+
+settings_file = directory + os.sep + "settings.txt"
+file = open(settings_file, "w+")
+file.write("Running with settings: \n"
+           "Output dir: {}\n"
+           "Num agents: {}\n"
+           "Mitigation: {}\n"
+           "Base infection: {}\n"
+           "Spread chance: {}\n"
+           "Spread distance: {}\n"
+           "Daily test chance: {}\n"
+           "Number of steps: {}\n"
+           "Test delay: {}\n"
+           .format(directory,
+                   args.num_agents,
+                   args.mitigation,
+                   args.baseInfection,
+                   args.spreadChance,
+                   args.spreadDistance,
+                   args.testChance,
+                   args.stepCount,
+                   args.testDelay))
+file.close()
 
 model = VirusModel(args.num_agents, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, args.baseInfection,
                    args.spreadDistance, args.spreadChance, args.testChance, args.mitigation, args.testDelay)
