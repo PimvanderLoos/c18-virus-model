@@ -22,7 +22,7 @@ $ git clone https://github.com/PimvanderLoos/c18-virus-model.git
 
 4) Run the program (from Master branch)
 ```shell
-$ python virus_model.py
+$ python run_model.py
 ```
 
 The visualization should open in a new browser window. 

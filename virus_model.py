@@ -1,14 +1,11 @@
 import pandas as pd
-import numpy as np
 from mesa import Agent, Model
 from mesa.datacollection import DataCollector
 from mesa.time import RandomActivation
-from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
-from mesa.visualization.modules import TextElement, ChartModule
+from mesa.visualization.modules import TextElement
 
 from canvas_room_grid import CanvasRoomGrid
-from room_grid import RoomGrid
 from rooster import *
 from virus import *
 
@@ -198,7 +195,7 @@ class VirusAgent(Agent):
     def quarantine_agents(self, last_contact_days=3):  # , detection_days = 1
         """"
         quarantine agents after being tested positive or having contact to positive tested person
-        
+
         :param last_contact_days: Quarantining agent if contact to positive agent in the last last_contact_days
         """
         if self.test_result == 1:
@@ -215,7 +212,7 @@ class VirusAgent(Agent):
     def trace_contact(self, distance_tracking=1):
         """"
         tracing contact to each agent in certain radius with time of last contact
-        
+
         :param distance_tracking: radius of moore-distance within contacts are traced
         """
         if not self.quarantine:
@@ -529,9 +526,15 @@ class TimeElement(TextElement):
 
 time_element = TimeElement()
 
-grid_width = 100
-grid_height = 100
-num_agents = 800
+DEFAULT_GRID_WIDTH = 100
+DEFAULT_GRID_HEIGH = 100
+DEFAULT_NUM_AGENTS = 800
+DEFAULT_MITIGATION = 'No measures'
+DEFAULT_BASE_INFECTION_CHANCE = 3
+DEFAULT_SPREAD_DISTANCE = 2
+DEFAULT_SPREAD_CHANCE = 8
+DEFAULT_DAILY_TEST_CHANCE = 10
+
 
 # Includes adjustable sliders for the user in the visualization
 model_params = {
@@ -544,17 +547,19 @@ model_params = {
                                          value="The options below allow you to adjust the parameter settings. "
                                                "After setting the options to the desired values, "
                                                "click 'Reset' and restart the simulation."),
-    "choice_of_measure": UserSettableParameter('choice', 'Mitigation measure applied', value='No measures',
+    "choice_of_measure": UserSettableParameter('choice', 'Mitigation measure applied', value=DEFAULT_MITIGATION,
                                                choices=['No measures', 'Contact Tracing']),
     # "contacttracing_option": UserSettableParameter('checkbox', 'Measure: Contact Tracing', value=True),
-    "num_agents": UserSettableParameter("slider", "Number of agents", num_agents, 10, 1000, 10),
-    "grid_width": grid_width,
-    "grid_height": grid_height,
-    "base_infection_chance": UserSettableParameter("slider", "Base infection probability", 3, 0, 100, 1),
-    "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)", 2, 1, 10, 1),
-    "spread_chance": UserSettableParameter("slider", "Spread probability", 8, 1, 100, 1),
-    "daily_testing_chance": UserSettableParameter("slider", "Daily probability of getting tested per agent", 10, 1, 100,
-                                                  1),
+    "num_agents": UserSettableParameter("slider", "Number of agents", DEFAULT_NUM_AGENTS, 10, 1000, 10),
+    "grid_width": DEFAULT_GRID_WIDTH,
+    "grid_height": DEFAULT_GRID_HEIGH,
+    "base_infection_chance": UserSettableParameter("slider", "Base infection probability",
+                                                   DEFAULT_BASE_INFECTION_CHANCE, 0, 100, 1),
+    "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)",
+                                             DEFAULT_SPREAD_DISTANCE, 1, 10, 1),
+    "spread_chance": UserSettableParameter("slider", "Spread probability", DEFAULT_SPREAD_CHANCE, 1, 100, 1),
+    "daily_testing_chance": UserSettableParameter("slider", "Daily probability of getting tested per agent",
+                                                  DEFAULT_DAILY_TEST_CHANCE, 1, 100, 1),
     "legend": UserSettableParameter('static_text',
                                     value="<b>Legend</b> <br> "
                                           "Green dot: healthy agent. <br> "
@@ -566,48 +571,9 @@ model_params = {
                                           "White square: space where the agent can move. ")
 }
 
-grid = CanvasRoomGrid(agent_portrayal, grid_width, grid_height, 900, 900)
-chart = ChartModule([{"Label": "infected",
-                      "Color": "Black"},
-                     {"Label": "deaths",
-                      "Color": "Red"},
-                     {"Label": "quarantined",
-                      "Color": "Yellow"}],
-                    data_collector_name='datacollector')
-chart_disease_state = ChartModule([{"Label": "just infected",
-                                    "Color": "rgba(0,0,255,1)"},
-                                   {"Label": "testable",
-                                    "Color": "rgba(255,0,212,1)"},
-                                   {"Label": "infectious",
-                                    "Color": "rgba(255,0,0,1)"},
-                                   {"Label": "symptomatic",
-                                    "Color": "rgba(102,0,0,1)"},
-                                   {"Label": "recovered",
-                                    "Color": "rgba(8,323,222,1)"},
-                                   {"Label": "deaths",
-                                    "Color": "Brown"}
-                                   ],
-                                  # include healthy? {"Label": "healthy", "Color": "rgba(43,255,0,1)"},
-                                  data_collector_name='datacollector')
-chart_quarantined = ChartModule([{"Label": "quarantined: infected",
-                                  "Color": "Green"},
-                                 {"Label": "quarantined: healthy",
-                                  "Color": "Yellow"},
-                                 {"Label": "not quarantined: infected",
-                                  "Color": "Red"}],
-                                data_collector_name='datacollector')
-chart_testing = ChartModule([{"Label": "tested total",
-                              "Color": "Black"},
-                             {"Label": "tested negative",
-                              "Color": "Blue"},
-                             {"Label": "tested positive",
-                              "Color": "Red"}],
-                            data_collector_name='datacollector')
 
-server = ModularServer(VirusModel,
-                       [time_element, grid, chart, chart_disease_state, chart_quarantined, chart_testing],
-                       "Virus Model",
-                       model_params)
+def create_grid():
+    return CanvasRoomGrid(agent_portrayal, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGH, 900, 900)
 
-server.port = 8543
-server.launch()
+
+
