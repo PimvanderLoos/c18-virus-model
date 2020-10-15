@@ -11,6 +11,7 @@ from canvas_room_grid import CanvasRoomGrid
 from room_grid import RoomGrid
 from rooster import *
 from virus import *
+from virus_test import VirusTest, TestOutcome
 
 """ TODO list
 Things we still want to program:
@@ -46,6 +47,7 @@ class VirusAgent(Agent):
         self.rooster_agent = RoosterAgent(self, model)
         self.room = None
         self.seat = None
+        self.virus_test = VirusTest(self.model.test_delay, self.model.random)
 
         """
         The day rooster where the agent will sit or walk.
@@ -58,10 +60,6 @@ class VirusAgent(Agent):
         self.quarantine_duration = 0
         """
         Keeps track of the remaining number of days this agent will be quarantined.
-        """
-        self.test_result = 0  # np.nan
-        """
-        Keeps track of testing status: 0 is not tested, -1 is negative, 1 is positive
         """
         self.day_tested = float(np.nan)
         """
@@ -116,7 +114,6 @@ class VirusAgent(Agent):
         if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
             return
 
-        print(self.model.spread_chance)
         other_agent.virus.infect(self.model.spread_chance, self.model.day)
 
     def set_room(self):
@@ -170,6 +167,7 @@ class VirusAgent(Agent):
         :param day: The number of the new day (assuming the models started at 0).
         """
         self.virus.handle_disease_progression(day)
+        self.virus_test.new_day(day)
 
         self.testing()
         self.quarantine_agents()
@@ -178,7 +176,6 @@ class VirusAgent(Agent):
             self.quarantine_duration -= 1
             if self.quarantine_duration <= 0:
                 self.quarantine = False
-                self.test_result = 0
 
         self.day_time = 0
 
@@ -186,14 +183,13 @@ class VirusAgent(Agent):
         """"
         testing agents (if virus testable)
         """
-        if not self.quarantine and \
-                (self.model.random.randrange(0, 100) < self.model.daily_testing_chance) & \
-                (self.virus.disease_state != DiseaseState.DECEASED):
-            self.day_tested = self.model.day
-            if self.virus.disease_state >= DiseaseState.TESTABLE:
-                self.test_result = 1
-            else:
-                self.test_result = -1
+        if (self.quarantine or
+                self.virus.is_deceased() or
+                self.model.random.randrange(0, 100) > self.model.daily_testing_chance):
+            return
+
+        self.day_tested = self.model.day
+        self.virus_test.perform_test(self.model.day, self.virus)
 
     def quarantine_agents(self, last_contact_days=3):  # , detection_days = 1
         """"
@@ -201,7 +197,7 @@ class VirusAgent(Agent):
 
         :param last_contact_days: Quarantining agent if contact to positive agent in the last last_contact_days
         """
-        if self.test_result == 1:
+        if self.virus_test.get_result(self.model.day) == TestOutcome.POSITIVE:
 
             ids_contact = self.df_contacts.loc[
                 (self.day_tested - self.df_contacts["time_contact"]) <= last_contact_days, "unique_id"].unique()
@@ -302,7 +298,7 @@ class VirusModel(Model):
     """A model with some number of agents."""
 
     def __init__(self, num_agents, grid_width, grid_height, base_infection_chance, spread_distance, spread_chance,
-                 daily_testing_chance, choice_of_measure, *args, **kwargs):
+                 daily_testing_chance, choice_of_measure, test_delay, *args, **kwargs):
         """
         Initializes a new Virus Model.
         :param num_agents: The number of agents that will participate in the model.
@@ -320,6 +316,11 @@ class VirusModel(Model):
         self.base_infection_chance = base_infection_chance
         """
         Describes the chance of an agent being infected at the start of the model
+        """
+
+        self.test_delay = test_delay
+        """
+        The number of days after an agent was tested the test results are available.
         """
 
         self.spread_distance = spread_distance
@@ -483,15 +484,15 @@ def get_symptomatic_count(model):
 
 
 def get_tested_count(model):
-    return int(np.sum([agent.test_result in [-1, 1] for agent in model.schedule.agents]))
+    return int(np.sum([agent.virus_test.get_test_stats().get_total_count() for agent in model.schedule.agents]))
 
 
 def get_tested_positive_count(model):
-    return int(np.sum([agent.test_result in [1] for agent in model.schedule.agents]))
+    return int(np.sum([agent.virus_test.get_test_stats().get_positive_count() for agent in model.schedule.agents]))
 
 
 def get_tested_negative_count(model):
-    return int(np.sum([agent.test_result in [-1] for agent in model.schedule.agents]))
+    return int(np.sum([agent.virus_test.get_test_stats().get_negative_count() for agent in model.schedule.agents]))
 
 
 def get_quarantined_infected(model):
@@ -531,6 +532,7 @@ time_element = TimeElement()
 grid_width = 100
 grid_height = 100
 num_agents = 800
+test_delay = 5
 
 # Includes adjustable sliders for the user in the visualization
 model_params = {
@@ -549,6 +551,7 @@ model_params = {
     "num_agents": UserSettableParameter("slider", "Number of agents", num_agents, 10, 1000, 10),
     "grid_width": grid_width,
     "grid_height": grid_height,
+    "test_delay": test_delay,
     "base_infection_chance": UserSettableParameter("slider", "Base infection probability", 3, 0, 100, 1),
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)", 2, 1, 10, 1),
     "spread_chance": UserSettableParameter("slider", "Spread probability", 8, 1, 100, 1),

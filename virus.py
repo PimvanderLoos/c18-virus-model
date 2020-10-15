@@ -1,5 +1,6 @@
 from enum import Enum
 from functools import total_ordering
+from random import Random
 
 DISEASE_PROGRESSION_TO_TESTABLE = 4
 """
@@ -37,17 +38,17 @@ The lethality of the virus, expressed as a percentage (0 - 100) of agents that w
 
 
 class Virus:
-    def __init__(self, random, base_infection_chance):
+    def __init__(self, rand: Random, base_infection_chance):
         """
         Create a new Virus object for an agent. Note that this doesn't immediately mean that the agent is infected.
         It only means that they can be infected.
 
-        :param random: The random instance to use for randomization.
+        :param rand: The random instance to use for randomization.
         :param base_infection_chance: The base change (percentage between 0 and 100) that the agent starts with an
         infection.
         """
-        self.random = random
-        if random.randrange(0, 100) < base_infection_chance:
+        self.random = rand
+        if self.random.randrange(0, 100) < base_infection_chance:
             self.disease_state = DiseaseState.INFECTIOUS
         else:
             self.disease_state = DiseaseState.HEALTHY
@@ -75,18 +76,21 @@ class Virus:
         """
         return self.disease_state >= DiseaseState.INFECTED
 
-    def apply_test(self, test_accuracy=100):
+    def is_deceased(self):
         """
-        Applies a test for the virus.
+        Checks if the owner of this Virus is deceased.
 
-        :param test_accuracy: The accuracy of the test. For example, a value of `50` would mean the chance has a 50%
-                              chance of resulting in a false negative (there are no false positives).
-                              Note that if the disease has progressed so far that the agent is already symptomatic,
-                              the accuracy is always assumed to be 100%.
-        :return: True if the test returned positive.
+        :return: True if the owner of this Virus is deceased.
         """
-        return (self.disease_state == DiseaseState.SYMPTOMATIC or
-                (self.disease_state >= DiseaseState.TESTABLE and self.random.randrange(0, 10) < test_accuracy))
+        return self.disease_state == DiseaseState.DECEASED
+
+    def is_testable(self):
+        """
+        Checks if the agent can show up on tests.
+
+        :return: True if the agent can be tested.
+        """
+        return self.disease_state >= DiseaseState.TESTABLE
 
     def handle_disease_progression(self, day):
         """
