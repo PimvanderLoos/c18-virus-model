@@ -369,8 +369,7 @@ class VirusModel(Model):
                              "quarantined: healthy": get_quarantined_healthy,
                              "not quarantined: infected": get_notquarantined_infected,
                              "tested total": get_tested_count, "tested positive": get_tested_positive_count,
-                             "tested negative": get_tested_negative_count},
-            agent_reporters={"Position": "pos"})
+                             "tested negative": get_tested_negative_count})
 
     def set_day_step(self):
         self.day_step = (self.total_steps % DAY_DURATION)

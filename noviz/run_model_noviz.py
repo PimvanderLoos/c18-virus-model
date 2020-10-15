@@ -1,7 +1,14 @@
 import argparse
+import matplotlib.pyplot as plt
+import os
 
+from noviz.visualize import Visualizer
 from virus_model import *
 
+LOG_PATH = "/log.txt"
+MODEL_DATA_PATH = "/model.pickle"
+
+# TODO: Accept seed parameter for the Random attribute of the model for reproducible results.
 parser = argparse.ArgumentParser(description='Run the model using the provided parameters')
 parser.add_argument('output', type=str, help="The output directory for the results")
 parser.add_argument('--num_agents', type=int, help="The number of agents to use", default=DEFAULT_NUM_AGENTS)
@@ -15,6 +22,7 @@ parser.add_argument('--spreadDistance', type=int, help="The maximum distance bet
 parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                     default=DEFAULT_DAILY_TEST_CHANCE)
 parser.add_argument('--stepCount', type=int, help="The number of steps to simulate", default=1000)
+parser.add_argument('--plot', dest='plot', help="When enabled, this will plot the results.", action='store_true')
 
 args = parser.parse_args()
 
@@ -23,6 +31,9 @@ minimum_step_count = 10
 if args.stepCount < minimum_step_count:
     raise ValueError("Please select at least {} steps.".format(minimum_step_count))
 
+os.makedirs(args.output, exist_ok=True)
+
+# TODO: Log this to a file in the output dir.
 print("Running with settings: \n"
       "Output dir: {}\n"
       "Num agents: {}\n"
@@ -47,5 +58,20 @@ model = VirusModel(args.num_agents, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, arg
 for step in range(0, args.stepCount):
     model.step()
 
+
+df = model.datacollector.get_model_vars_dataframe()
+# Keys:
+# Index(['infected', 'deaths', 'quarantined', 'healthy', 'just infected',
+#        'testable', 'infectious', 'symptomatic', 'recovered',
+#        'quarantined: infected', 'quarantined: healthy',
+#        'not quarantined: infected', 'tested total', 'tested positive',
+#        'tested negative'],
+
+
+model_data_path = args.output.rstrip(os.sep) + MODEL_DATA_PATH
+df.to_pickle(model_data_path)
+
+if args.plot:
+    Visualizer(df).visualize_all()
 
 
