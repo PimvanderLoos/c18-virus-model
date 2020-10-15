@@ -113,7 +113,6 @@ class VirusAgent(Agent):
         if self.model.grid.is_path_obstructed(self.pos[0], self.pos[1], other_agent.pos[0], other_agent.pos[1]):
             return
 
-        print(self.model.spread_chance)
         other_agent.virus.infect(self.model.spread_chance, self.model.day)
 
     def set_room(self):
@@ -527,7 +526,7 @@ class TimeElement(TextElement):
 time_element = TimeElement()
 
 DEFAULT_GRID_WIDTH = 100
-DEFAULT_GRID_HEIGH = 100
+DEFAULT_GRID_HEIGHT = 100
 DEFAULT_NUM_AGENTS = 800
 DEFAULT_MITIGATION = 'No measures'
 DEFAULT_BASE_INFECTION_CHANCE = 3
@@ -552,7 +551,7 @@ model_params = {
     # "contacttracing_option": UserSettableParameter('checkbox', 'Measure: Contact Tracing', value=True),
     "num_agents": UserSettableParameter("slider", "Number of agents", DEFAULT_NUM_AGENTS, 10, 1000, 10),
     "grid_width": DEFAULT_GRID_WIDTH,
-    "grid_height": DEFAULT_GRID_HEIGH,
+    "grid_height": DEFAULT_GRID_HEIGHT,
     "base_infection_chance": UserSettableParameter("slider", "Base infection probability",
                                                    DEFAULT_BASE_INFECTION_CHANCE, 0, 100, 1),
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)",
@@ -572,8 +571,6 @@ model_params = {
 }
 
 
-def create_grid():
-    return CanvasRoomGrid(agent_portrayal, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGH, 900, 900)
-
-
+def create_grid(width=DEFAULT_GRID_WIDTH, height=DEFAULT_GRID_HEIGHT):
+    return CanvasRoomGrid(agent_portrayal, width, height, 900, 900)
 
