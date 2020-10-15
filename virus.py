@@ -75,18 +75,13 @@ class Virus:
         """
         return self.disease_state >= DiseaseState.INFECTED
 
-    def apply_test(self, test_accuracy=100):
+    def is_testable(self):
         """
-        Applies a test for the virus.
+        Checks if the agent can show up on tests.
 
-        :param test_accuracy: The accuracy of the test. For example, a value of `50` would mean the chance has a 50%
-                              chance of resulting in a false negative (there are no false positives).
-                              Note that if the disease has progressed so far that the agent is already symptomatic,
-                              the accuracy is always assumed to be 100%.
-        :return: True if the test returned positive.
+        :return: True if the agent can be tested.
         """
-        return (self.disease_state == DiseaseState.SYMPTOMATIC or
-                (self.disease_state >= DiseaseState.TESTABLE and self.random.randrange(0, 10) < test_accuracy))
+        return self.disease_state >= DiseaseState.TESTABLE
 
     def handle_disease_progression(self, day):
         """

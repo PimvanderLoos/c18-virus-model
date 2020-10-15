@@ -1,6 +1,8 @@
 from enum import Enum
 from numbers import Number
+from random import Random
 
+from virus import Virus
 
 RESULT_ACTIVE_DAY = 7
 """
@@ -40,6 +42,7 @@ class TestResult:
     def get_result(self, day) -> TestOutcome:
         """
         Gets the outcome of this test if it is available, otherwise, it'll return `TestOutcome.UNTESTED`.
+
         :param day: The day on which to retrieve the test result.
         :return: The outcome of the result if that is available, otherwise `TestOutcome.UNTESTED`.
         """
@@ -47,13 +50,26 @@ class TestResult:
 
 
 class VirusTest:
-    def __init__(self, result_delay: Number, false_negative_rate=0, false_positive_rate=0):
+    def __init__(self, result_delay: Number, random: Random, false_negative_rate=0, false_positive_rate=0):
+        """
+        Creates a new VirusTest object. This object allows you to create new tests and obtain their results.
+
+        :param result_delay: The number of days between performing a test and its result being available.
+        :param false_negative_rate: The rate of false negatives.
+        :param false_positive_rate: The rate of false positives.
+        """
         self.result_delay = result_delay
+        self.random = random
         self.false_negative_rate = false_negative_rate
         self.false_positive_rate = false_positive_rate
         self.__test_results = []
 
     def new_day(self, day):
+        """
+        Handles the start of a new day.
+
+        :param day: The number of the new day.
+        """
         self.__test_results = [result for result in self.__test_results if result.day >= (day - RESULT_ACTIVE_DAY)]
 
         start = 0
@@ -81,10 +97,34 @@ class VirusTest:
         self.__test_results = self.__test_results[start:]
 
     def get_result(self, day) -> TestOutcome:
+        """
+        Gets the result of the latest test if one is available on this day. (It might not be because of delays).
+
+        :param day: The number of the new day.
+        :return: The `TestOutcome` associated with the current status of the tests.
+        """
         if len(self.__test_results) > 0:
             return self.__test_results[0].get_result(day)
         return TestOutcome.UNTESTED
 
+    def do_test(self, day, virus_state: Virus):
+        """
+        Performs a test using a given `Virus` object.
 
+        :param day: The number of the day.
+        :param virus_state: The `Virus` to test.
+        """
+        if virus_state.is_infected():
+            # If the actual virus status is positive, check against the false negative rate.
+            if self.random.randrange(0, 100) < self.false_negative_rate:
+                test_outcome = TestOutcome.NEGATIVE
+            else:
+                test_outcome = TestOutcome.POSITIVE
+        else:
+            # If the actual virus status is negative, check against the false positive rate.
+            if self.random.randrange(0, 100) < self.false_positive_rate:
+                test_outcome = TestOutcome.POSITIVE
+            else:
+                test_outcome = TestOutcome.NEGATIVE
 
-
+        self.__test_results.append(TestResult(test_outcome, day + self.result_delay))
