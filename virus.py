@@ -1,5 +1,6 @@
 from enum import Enum
 from functools import total_ordering
+from random import Random
 
 DISEASE_PROGRESSION_TO_TESTABLE = 4
 """
@@ -37,17 +38,17 @@ The lethality of the virus, expressed as a percentage (0 - 100) of agents that w
 
 
 class Virus:
-    def __init__(self, random, base_infection_chance):
+    def __init__(self, rand: Random, base_infection_chance):
         """
         Create a new Virus object for an agent. Note that this doesn't immediately mean that the agent is infected.
         It only means that they can be infected.
 
-        :param random: The random instance to use for randomization.
+        :param rand: The random instance to use for randomization.
         :param base_infection_chance: The base change (percentage between 0 and 100) that the agent starts with an
         infection.
         """
-        self.random = random
-        if random.randrange(0, 100) < base_infection_chance:
+        self.random = rand
+        if self.random.randrange(0, 100) < base_infection_chance:
             self.disease_state = DiseaseState.INFECTIOUS
         else:
             self.disease_state = DiseaseState.HEALTHY

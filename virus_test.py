@@ -1,5 +1,4 @@
 from enum import Enum
-from numbers import Number
 from random import Random
 
 from virus import Virus
@@ -29,7 +28,7 @@ class TestOutcome(Enum):
 
 
 class TestResult:
-    def __init__(self, test_outcome: TestOutcome, result_day: Number):
+    def __init__(self, test_outcome: TestOutcome, result_day):
         """
         Creates a new TestResult.
 
@@ -46,23 +45,42 @@ class TestResult:
         :param day: The day on which to retrieve the test result.
         :return: The outcome of the result if that is available, otherwise `TestOutcome.UNTESTED`.
         """
-        return TestOutcome.UNTESTED if day >= self.__result_day else self.__test_outcome
+        if self.__result_day <= day <= (self.__result_day + RESULT_ACTIVE_DAY):
+            return self.__test_outcome
+
+        return TestOutcome.UNTESTED
+
+    def get_raw_result(self):
+        """
+        Gets the raw outcome of this test, disregarding any delays.
+
+        :return: The outcome of this test.
+        """
+        return self.__test_outcome
+
+    def get_result_day(self):
+        """
+        Gets the day on which the result of the test will become available.
+
+        :return: The number of the day on which the test result will be available.
+        """
+        return self.__result_day
 
 
 class VirusTest:
-    def __init__(self, result_delay: Number, random: Random, false_negative_rate=0, false_positive_rate=0):
+    def __init__(self, result_delay, random: Random, false_negative_rate=0, false_positive_rate=0):
         """
         Creates a new VirusTest object. This object allows you to create new tests and obtain their results.
 
         :param result_delay: The number of days between performing a test and its result being available.
-        :param false_negative_rate: The rate of false negatives.
-        :param false_positive_rate: The rate of false positives.
+        :param false_negative_rate: The rate of false negatives. 0 (disabled) by default.
+        :param false_positive_rate: The rate of false positives. 0 (disabled) by default.
         """
         self.result_delay = result_delay
         self.random = random
         self.false_negative_rate = false_negative_rate
         self.false_positive_rate = false_positive_rate
-        self.__test_results = []
+        self.__test_queue = []
 
     def new_day(self, day):
         """
@@ -70,31 +88,26 @@ class VirusTest:
 
         :param day: The number of the new day.
         """
-        self.__test_results = [result for result in self.__test_results if result.day >= (day - RESULT_ACTIVE_DAY)]
-
         start = 0
         """
         The first index to keep in the list. For example, when set to 1, only index 0 will be removed.
         """
-        invalid_day = day - RESULT_ACTIVE_DAY
+        invalidation_day = day - RESULT_ACTIVE_DAY
         """
         The day after which the result is no longer valid.
         """
-        result_day = day - self.result_delay
-        """
-        The day on which the result is published.
-        """
-        for idx in range(0, len(self.__test_results)):
-            test_result = self.__test_results[idx]
+
+        for idx in range(0, len(self.__test_queue)):
+            test_result = self.__test_queue[idx]
             # Remove any tests that are no longer useful.
-            if test_result.day < invalid_day:
-                start = idx
+            if test_result.get_result_day() < invalidation_day:
+                start = idx + 1
                 continue
 
             # Always get the latest valid result.
-            if test_result.day >= result_day:
+            if test_result.get_result_day() <= day:
                 start = idx
-        self.__test_results = self.__test_results[start:]
+        self.__test_queue = self.__test_queue[start:]
 
     def get_result(self, day) -> TestOutcome:
         """
@@ -103,11 +116,11 @@ class VirusTest:
         :param day: The number of the new day.
         :return: The `TestOutcome` associated with the current status of the tests.
         """
-        if len(self.__test_results) > 0:
-            return self.__test_results[0].get_result(day)
+        if len(self.__test_queue) > 0:
+            return self.__test_queue[0].get_result(day)
         return TestOutcome.UNTESTED
 
-    def do_test(self, day, virus_state: Virus):
+    def perform_test(self, day, virus_state: Virus):
         """
         Performs a test using a given `Virus` object.
 
@@ -127,4 +140,15 @@ class VirusTest:
             else:
                 test_outcome = TestOutcome.NEGATIVE
 
-        self.__test_results.append(TestResult(test_outcome, day + self.result_delay))
+        self.__test_queue.append(TestResult(test_outcome, day + self.result_delay))
+
+    def get_test_queue_size(self):
+        """
+        Gets the number of tests queued up.
+
+        Whether or not a test is in the queue doesn't say anything about whether or not its result is known;
+        It merely means that the result is available right now or will be at some point in the future.
+
+        :return: The number of tests currently queued up.
+        """
+        return len(self.__test_queue)
