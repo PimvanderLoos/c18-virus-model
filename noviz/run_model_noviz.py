@@ -1,5 +1,4 @@
 import argparse
-import matplotlib.pyplot as plt
 import os
 
 from noviz.visualize import Visualizer
@@ -19,6 +18,8 @@ parser.add_argument('--spreadChance', type=int, help="The chance of the virus sp
                                                      "tick (15 min)", default=DEFAULT_SPREAD_CHANCE)
 parser.add_argument('--spreadDistance', type=int, help="The maximum distance between two agents for them to be able "
                                                        "to infect each other", default=DEFAULT_SPREAD_DISTANCE)
+parser.add_argument('--testDelay', type=int, help="The number of days it takes for a test result to become available ",
+                    default=DEFAULT_TEST_DELAY)
 parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                     default=DEFAULT_DAILY_TEST_CHANCE)
 parser.add_argument('--stepCount', type=int, help="The number of steps to simulate", default=1000)
@@ -45,6 +46,7 @@ print("Running with settings: \n"
       "Spread distance: {}\n"
       "Daily test chance: {}\n"
       "Number of steps: {}\n"
+      "Test delay: {}\n"
       .format(directory,
               args.num_agents,
               args.mitigation,
@@ -52,24 +54,16 @@ print("Running with settings: \n"
               args.spreadChance,
               args.spreadDistance,
               args.testChance,
-              args.stepCount))
+              args.stepCount,
+              args.testDelay))
 
 model = VirusModel(args.num_agents, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, args.baseInfection,
-                   args.spreadDistance, args.spreadChance, args.testChance, args.mitigation)
+                   args.spreadDistance, args.spreadChance, args.testChance, args.mitigation, args.testDelay)
 
 for step in range(0, args.stepCount):
     model.step()
 
-
 df = model.datacollector.get_model_vars_dataframe()
-# Keys:
-# Index(['infected', 'deaths', 'quarantined', 'healthy', 'just infected',
-#        'testable', 'infectious', 'symptomatic', 'recovered',
-#        'quarantined: infected', 'quarantined: healthy',
-#        'not quarantined: infected', 'tested total', 'tested positive',
-#        'tested negative'],
-
-
 model_data_path = directory + os.sep + MODEL_DATA_PATH
 df.to_pickle(model_data_path)
 
