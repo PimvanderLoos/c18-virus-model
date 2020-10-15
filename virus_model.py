@@ -198,7 +198,7 @@ class VirusAgent(Agent):
     def quarantine_agents(self, last_contact_days=3):  # , detection_days = 1
         """"
         quarantine agents after being tested positive or having contact to positive tested person
-        
+
         :param last_contact_days: Quarantining agent if contact to positive agent in the last last_contact_days
         """
         if self.test_result == 1:
@@ -215,7 +215,7 @@ class VirusAgent(Agent):
     def trace_contact(self, distance_tracking=1):
         """"
         tracing contact to each agent in certain radius with time of last contact
-        
+
         :param distance_tracking: radius of moore-distance within contacts are traced
         """
         if not self.quarantine:
@@ -373,8 +373,7 @@ class VirusModel(Model):
                              "quarantined: healthy": get_quarantined_healthy,
                              "not quarantined: infected": get_notquarantined_infected,
                              "tested total": get_tested_count, "tested positive": get_tested_positive_count,
-                             "tested negative": get_tested_negative_count},
-            agent_reporters={"Position": "pos"})
+                             "tested negative": get_tested_negative_count})
 
     def set_day_step(self):
         self.day_step = (self.total_steps % DAY_DURATION)
