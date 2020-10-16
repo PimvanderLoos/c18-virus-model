@@ -1,5 +1,9 @@
-def get_line_between_points(x_0, y_0, x_1, y_1):
-    """ Gets a line between two coordinate pairs represented by a list of tuple[x, y].
+from typing import Set, Tuple
+
+
+def get_line_between_points(x_0: int, y_0: int, x_1: int, y_1: int) -> Set[Tuple[int, int]]:
+    """
+    Gets a line between two coordinate pairs represented by a list of tuple[x, y].
     The line is found using Bresenham's line algorithm.
     See: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 

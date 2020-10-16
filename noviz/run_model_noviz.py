@@ -5,7 +5,6 @@ from noviz.constants import MODEL_DATA_PATH
 from noviz.visualize import Visualizer
 from virus_model import *
 
-# TODO: Accept seed parameter for the Random attribute of the model for reproducible results.
 parser = argparse.ArgumentParser(description='Run the model using the provided parameters')
 parser.add_argument('output', type=str, help="The output directory for the results")
 parser.add_argument('--num_agents', type=int, help="The number of agents to use", default=DEFAULT_NUM_AGENTS)
@@ -20,9 +19,12 @@ parser.add_argument('--testDelay', type=int, help="The number of days it takes f
                     default=DEFAULT_TEST_DELAY)
 parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                     default=DEFAULT_DAILY_TEST_CHANCE)
-parser.add_argument('--stepCount', type=int, help="The number of steps to simulate", default=1000)
+parser.add_argument('--stepCount', type=int, help="The number of steps to simulate", default=2000)
 parser.add_argument('--show-plots', dest='show', help="Show the plots.", action='store_true')
 parser.add_argument('--write-plots', dest='write', help="Write the plots to files", action='store_true')
+parser.add_argument('--random-seed', type=int, dest='seed', help="The seed to use for the random module. This is a "
+                                                                 "numerical value. Not providing a seed means random "
+                                                                 "values will be used.", default=DEFAULT_RANDOM_SEED)
 
 args = parser.parse_args()
 
@@ -47,6 +49,7 @@ file.write("Running with settings: \n"
            "Daily test chance: {}\n"
            "Number of steps: {}\n"
            "Test delay: {}\n"
+           "Seed: {}\n"
            .format(directory,
                    args.num_agents,
                    args.mitigation,
@@ -55,11 +58,12 @@ file.write("Running with settings: \n"
                    args.spreadDistance,
                    args.testChance,
                    args.stepCount,
-                   args.testDelay))
+                   args.testDelay,
+                   args.seed))
 file.close()
 
 model = VirusModel(args.num_agents, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, args.baseInfection,
-                   args.spreadDistance, args.spreadChance, args.testChance, args.mitigation, args.testDelay)
+                   args.spreadDistance, args.spreadChance, args.testChance, args.mitigation, args.testDelay, args.seed)
 
 for step in range(0, args.stepCount):
     model.step()

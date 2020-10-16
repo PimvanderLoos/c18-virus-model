@@ -28,7 +28,7 @@ class TestOutcome(Enum):
 
 
 class TestResult:
-    def __init__(self, test_outcome: TestOutcome, result_day):
+    def __init__(self, test_outcome: TestOutcome, result_day: int):
         """
         Creates a new TestResult.
 
@@ -38,7 +38,7 @@ class TestResult:
         self.__test_outcome = test_outcome
         self.__result_day = result_day
 
-    def get_result(self, day) -> TestOutcome:
+    def get_result(self, day: int) -> TestOutcome:
         """
         Gets the outcome of this test if it is available, otherwise, it'll return `TestOutcome.UNTESTED`.
 
@@ -50,7 +50,7 @@ class TestResult:
 
         return TestOutcome.UNTESTED
 
-    def get_raw_result(self):
+    def get_raw_result(self) -> TestOutcome:
         """
         Gets the raw outcome of this test, disregarding any delays.
 
@@ -58,7 +58,7 @@ class TestResult:
         """
         return self.__test_outcome
 
-    def get_result_day(self):
+    def get_result_day(self) -> int:
         """
         Gets the day on which the result of the test will become available.
 
@@ -87,7 +87,7 @@ class TestStatistics:
         self.__pending += 1
         self.__total += 1
 
-    def get_pending_count(self):
+    def get_pending_count(self) -> int:
         """
         Gets the number of tests whose results are not yet available.
 
@@ -95,7 +95,7 @@ class TestStatistics:
         """
         return self.__pending
 
-    def get_total_count(self):
+    def get_total_count(self) -> int:
         """
         Gets the total number of tests performed on this VirusTest far.
 
@@ -105,7 +105,7 @@ class TestStatistics:
         """
         return self.__total
 
-    def get_positive_count(self):
+    def get_positive_count(self) -> int:
         """
         Gets the total number of tests that returned a positive (= infected) result so far.
 
@@ -113,7 +113,7 @@ class TestStatistics:
         """
         return self.__positive
 
-    def get_negative_count(self):
+    def get_negative_count(self) -> int:
         """
         Gets the total number of tests that returned a negative (= not infected) result so far.
 
@@ -123,7 +123,7 @@ class TestStatistics:
 
 
 class VirusTest:
-    def __init__(self, result_delay, random: Random, false_negative_rate=0, false_positive_rate=0):
+    def __init__(self, result_delay: int, random: Random, false_negative_rate: int = 0, false_positive_rate: int = 0):
         """
         Creates a new VirusTest object. This object allows you to create new tests and obtain their results.
 
@@ -138,7 +138,7 @@ class VirusTest:
         self.__test_queue = []
         self.test_stats = TestStatistics()
 
-    def new_day(self, day):
+    def new_day(self, day: int):
         """
         Handles the start of a new day.
 
@@ -170,7 +170,7 @@ class VirusTest:
                 start = idx
         self.__test_queue = self.__test_queue[start:]
 
-    def get_result(self, day) -> TestOutcome:
+    def get_result(self, day: int) -> TestOutcome:
         """
         Gets the result of the latest test if one is available on this day. (It might not be because of delays).
 
@@ -181,7 +181,7 @@ class VirusTest:
             return self.__test_queue[0].get_result(day)
         return TestOutcome.UNTESTED
 
-    def perform_test(self, day, virus_state: Virus):
+    def perform_test(self, day: int, virus_state: Virus):
         """
         Performs a test using a given `Virus` object.
 
@@ -207,7 +207,7 @@ class VirusTest:
 
         self.__test_queue.append(TestResult(test_outcome, day + self.result_delay))
 
-    def get_test_queue_size(self):
+    def get_test_queue_size(self) -> int:
         """
         Gets the number of tests queued up.
 

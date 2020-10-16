@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 class Visualizer:
-    def __init__(self, data: pd.DataFrame, directory: str, save_file=True, show_file=False):
+    def __init__(self, data: pd.DataFrame, directory: str, save_file: bool = True, show_file: bool = False):
         self.data = data
         self.directory = directory
         self.save_file = save_file

@@ -38,7 +38,7 @@ class StatisticManager:
         [row.extend(stat.get_result(data)) for stat in self.__statistics]
         self.__data.append(row)
 
-    def write_csv(self, file):
+    def write_csv(self, file: str):
         field_names = ["name"]
         field_names.extend([stat.get_name() for stat in self.__statistics])
 

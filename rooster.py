@@ -1,3 +1,5 @@
+from typing import Optional
+
 from room_grid import *
 
 DAY_PARTS = 4
@@ -18,7 +20,7 @@ class RoosterAgent:
         self.model = model
         self.rooster = self.model.rooster_model.rooster[:, self.agent_id]
 
-    def new_day(self, day_duration, model):
+    def new_day(self, day_duration: int, model):
         # pass
         for i in range(int(day_duration / DAY_PART_DURATION)):
             for j in range(DAY_PART_DURATION):
@@ -31,16 +33,17 @@ class RoosterAgent:
                 self.rooster.append((room, seat, step))
                 self.steps_at_beginning_day = model.total_steps
 
-    def get_available_room(self, model):
+    def get_available_room(self, model) -> Optional[LectureRoom]:
         for room in self.model.grid.rooms_list:
             if room.room_available():
                 return room
         return None
 
-    def get_seat(self, room):
+    def get_seat(self, room) -> Optional[Seat]:
         for seat in room.seats:
             if seat.available:
                 return seat
+        return None
 
 
 class RoosterModel:
@@ -58,7 +61,7 @@ class RoosterModel:
         Defaults to the break room.
         """
 
-    def get_random_room_id(self):
+    def get_random_room_id(self) -> Tuple[int, Optional[LectureRoom]]:
         room_id = self.model.random.randrange(self.model.grid.room_count + 1)
         if room_id == self.break_room_id:
             return room_id, None
@@ -70,7 +73,7 @@ class RoosterModel:
 
         room.is_reserved = True
         return room_id, room
-        
+
     def make_day_rooster(self):
         rooster = self.rooster
         for agent_id in range(rooster.shape[1]):

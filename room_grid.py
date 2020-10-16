@@ -1,5 +1,6 @@
 import math
-from typing import Iterator, List
+from random import Random
+from typing import Iterator, List, Optional
 
 from mesa.space import MultiGrid, Coordinate
 from enum import Enum
@@ -50,14 +51,15 @@ class Side(Enum):
 
 
 class Seat:
-    def __init__(self, x, y):
+    def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
         self.available = True
 
 
 class LectureRoom:
-    def __init__(self, room_id, x_min, y_min, x_max, y_max, entry_side, entry_side_offset=2):
+    def __init__(self, room_id: int, x_min: int, y_min: int, x_max: int, y_max: int,
+                 entry_side: Side, entry_side_offset: int = 2):
         """
         :param room_id: The unique ID of this room.
         :param x_min: The lower bound x-coordinate of this room (includes the wall!)
@@ -117,7 +119,7 @@ class LectureRoom:
         self.seats = []
         self.populate_seats()
 
-    def get_capacity(self):
+    def get_capacity(self) -> int:
         """
         Gets the total number of seats that exist in this room. This does not take any measures or occupancy status into
         account.
@@ -126,13 +128,13 @@ class LectureRoom:
         """
         return len(self.seats)
 
-    def room_available(self):
+    def room_available(self) -> bool:
         for seat in self.seats:
             if seat.available:
                 return True
         return False
 
-    def is_in_room(self, x, y):
+    def is_in_room(self, x: int, y: int) -> bool:
         """
         Checks if a given coordinate pair is inside this room. Note that this does NOT include the walls!
         :param x: The x-coordinate to check.
@@ -146,7 +148,7 @@ class LectureRoom:
             for y in range(self.y_min_seat, self.y_max_seat + 1):
                 self.seats.append(Seat(x, y))
 
-    def is_wall(self, x, y):
+    def is_wall(self, x: int, y: int) -> bool:
         """
         Checks if the given position is a wall.
 
@@ -160,11 +162,11 @@ class LectureRoom:
             return False
         return x == self.x_min or x == self.x_max or y == self.y_min or y == self.y_max
 
-    def is_lecturer_area(self, x, y):
+    def is_lecturer_area(self, x: int, y: int) -> bool:
         return self.x_min_lecturer_area <= x <= self.x_max_lecturer_area and \
                self.y_min_lecturer_area <= y <= self.y_max_lecturer_area
 
-    def is_seat(self, x, y):
+    def is_seat(self, x: int, y: int) -> bool:
         """
         Checks if the given position is a seat.
 
@@ -174,7 +176,7 @@ class LectureRoom:
         """
         return self.x_min_seat <= x <= self.x_max_seat and self.y_min_seat <= y <= self.y_max_seat
 
-    def is_entry(self, x, y):
+    def is_entry(self, x: int, y: int) -> bool:
         """
         Checks if the given position is the door to this room.
 
@@ -184,7 +186,7 @@ class LectureRoom:
         """
         return x == self.x_entry and y == self.y_entry
 
-    def is_available(self, x, y):
+    def is_available(self, x: int, y: int) -> bool:
         """
         Checks if the given position is available. I.e. it's not a wall or a seat.
 
@@ -194,7 +196,7 @@ class LectureRoom:
         """
         return self.is_entry(x, y) or self.is_lecturer_area(x, y)
 
-    def get_seat(self, x, y):
+    def get_seat(self, x: int, y: int) -> Optional[Seat]:
         """
         Gets the seat at the given position, if one such seat exists.
 
@@ -207,7 +209,7 @@ class LectureRoom:
                 return seat
         return None
 
-    def get_portrayal(self, x, y):
+    def get_portrayal(self, x: int, y: int):
         """
         Gets the portrayal of the square at the given position. The portrayal determines how it's rendered.
 
@@ -224,7 +226,7 @@ class LectureRoom:
 
 
 class RoomGrid(MultiGrid):
-    def __init__(self, width: int, height: int, torus: bool, room_count=20, room_size=15):
+    def __init__(self, width: int, height: int, torus: bool, room_count: int = 20, room_size: int = 15):
         """
          :param room_count: The number of rooms (excluding break room).
          :param room_size: The size of each regular room (excluding break room).
@@ -252,7 +254,7 @@ class RoomGrid(MultiGrid):
         for room_idx in range(self.room_count):
             self.generate_room(room_idx)
 
-    def generate_room(self, room_idx):
+    def generate_room(self, room_idx: int):
         row = int(math.ceil((room_idx + 1) / self.room_row_size) - 1)
         col = int((room_idx + 1) - (row * self.room_row_size) - 1)
 
@@ -272,10 +274,10 @@ class RoomGrid(MultiGrid):
         self.rooms[row][col] = r
         self.rooms_list.append(r)
 
-    def is_edge(self, x, y):
+    def is_edge(self, x: int, y: int) -> bool:
         return x == 0 or y == 0 or x == (self.width - 1) or y == (self.height - 1)
 
-    def is_wall(self, x, y):
+    def is_wall(self, x: int, y: int) -> bool:
         """
         Checks if there is a wall at the given position.
 
@@ -291,7 +293,7 @@ class RoomGrid(MultiGrid):
             return False
         return room.is_wall(x, y)
 
-    def is_available(self, x, y, allowed_in_rooms=True):
+    def is_available(self, x: int, y: int, allowed_in_rooms: bool = True) -> bool:
         """
         Checks if the given position is available. I.e. it's not a wall or a seat.
 
@@ -312,14 +314,14 @@ class RoomGrid(MultiGrid):
             return not room.is_wall(x, y)
         return room.is_available(x, y)
 
-    def get_portrayal(self, x, y):
+    def get_portrayal(self, x: int, y: int):
         if self.is_edge(x, y):
             return wall_portrayal()
 
         room = self.get_room(x, y)
         return None if room is None else room.get_portrayal(x, y)
 
-    def get_room_from_id(self, room_id):
+    def get_room_from_id(self, room_id: int) -> Optional[LectureRoom]:
         """
         Gets the room with the given ID.
 
@@ -330,7 +332,7 @@ class RoomGrid(MultiGrid):
             return None
         return self.rooms_list[room_id]
 
-    def get_room(self, x, y):
+    def get_room(self, x: int, y: int) -> Optional[LectureRoom]:
         """
         Gets the room at a given point. Note that this does include the walls!
 
@@ -353,7 +355,7 @@ class RoomGrid(MultiGrid):
 
         return self.rooms[row][col]
 
-    def is_path_obstructed(self, x_0, y_0, x_1, y_1):
+    def is_path_obstructed(self, x_0: int, y_0: int, x_1: int, y_1: int) -> bool:
         """
         Checks if the path between two positions is obstructed by any walls.
         :param x_0: The x-coordinate of the first positions.
@@ -367,7 +369,7 @@ class RoomGrid(MultiGrid):
                 return True
         return False
 
-    def get_random_pos(self, random, allowed_in_rooms=False):
+    def get_random_pos(self, random: Random, allowed_in_rooms: bool = False) -> [int, int]:
         """
         Gets a random available position on this grid. See #is_available for more information
 

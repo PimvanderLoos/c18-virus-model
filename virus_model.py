@@ -1,4 +1,5 @@
 import pandas as pd
+import random
 from mesa import Agent, Model
 from mesa.datacollection import DataCollector
 from mesa.time import RandomActivation
@@ -34,7 +35,7 @@ The number of ticks that fit into a 'night'.
 class VirusAgent(Agent):
     """ An agent with fixed initial wealth."""
 
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id: int, model: 'VirusModel'):
         super().__init__(unique_id, model)
         self.model = model
         self.in_lecture = False
@@ -67,7 +68,7 @@ class VirusAgent(Agent):
         Traces the last contact to each other agent
         """
 
-    def enforce_quarantine(self, days):
+    def enforce_quarantine(self, days: int):
         """
         Places this agent under quarantine.
 
@@ -91,7 +92,7 @@ class VirusAgent(Agent):
 
         self.model.grid.move_agent(self, new_position)
 
-    def handle_contact(self, other_agent):
+    def handle_contact(self, other_agent: 'VirusAgent'):
         """
         Attempts to spread the virus to another agent. This only has an effect if the other agent isn't already infected.
 
@@ -119,13 +120,13 @@ class VirusAgent(Agent):
         else:
             self.room = self.model.grid.rooms_list[room_id]
 
-    def set_seat(self, random=True):
+    def set_seat(self, random_seat: bool = True):
         if self.room is None:
             self.seat = None
             return
 
         found_seat = None
-        if random:
+        if random_seat:
             threshold = self.room.get_capacity() / 4
             """
             At which point we'll abandon the idea of randomly assigning agents to seats, as it'll take too long and 
@@ -134,13 +135,13 @@ class VirusAgent(Agent):
 
             available_seat_count = sum([seat.available for seat in self.room.seats])
             if available_seat_count < threshold:
-                random = False
+                random_seat = False
 
             found_seat = self.room.seats[0]
             while not found_seat.available:
                 found_seat = self.room.seats[self.model.random.randrange(self.room.get_capacity())]
 
-        if not random:
+        if not random_seat:
             for seat in self.room.seats:
                 if seat.available:
                     found_seat = seat
@@ -156,7 +157,7 @@ class VirusAgent(Agent):
         self.model.grid.move_agent(self, new_position)
         self.seat = found_seat
 
-    def new_day(self, day):
+    def new_day(self, day: int):
         """
         Handles the start of a new day.
 
@@ -187,7 +188,7 @@ class VirusAgent(Agent):
         self.day_tested = self.model.day
         self.virus_test.perform_test(self.model.day, self.virus)
 
-    def quarantine_agents(self, last_contact_days=3):  # , detection_days = 1
+    def quarantine_agents(self, last_contact_days: int = 3):  # , detection_days = 1
         """"
         quarantine agents after being tested positive or having contact to positive tested person
 
@@ -204,7 +205,7 @@ class VirusAgent(Agent):
             if not self.quarantine:
                 self.enforce_quarantine(14)
 
-    def trace_contact(self, distance_tracking=1):
+    def trace_contact(self, distance_tracking: int = 1):
         """"
         tracing contact to each agent in certain radius with time of last contact
 
@@ -238,7 +239,7 @@ class VirusAgent(Agent):
         else:
             self.model.grid.move_agent(self, (pos_x, pos_y))
 
-    def do_rooster_step(self, room_rooster_id):
+    def do_rooster_step(self, room_rooster_id: int):
         """
         Takes care of whatever the agent has to do this step according to their schedule/rooster.
         :param room_rooster_id: The ID of the room they should be in. If they are not already there,
@@ -293,10 +294,12 @@ class VirusAgent(Agent):
 class VirusModel(Model):
     """A model with some number of agents."""
 
-    def __init__(self, num_agents, grid_width, grid_height, base_infection_chance, spread_distance, spread_chance,
-                 daily_testing_chance, choice_of_measure, test_delay, *args, **kwargs):
+    def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_chance: int,
+                 spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
+                 test_delay: int, seed: int = None, *args, **kwargs):
         """
         Initializes a new Virus Model.
+
         :param num_agents: The number of agents that will participate in the model.
         :param grid_width: The width of the grid.
         :param grid_height: The height of the grid.
@@ -306,8 +309,12 @@ class VirusModel(Model):
         :param daily_testing_chance: The probability of an agent being tested at the start of each day.
         :param choice_of_measure: Which measures to enable to attempt to prevent the spread of the virus.
         :param test_delay: The number of days it takes to get the result of a test.
+        :param seed: The seed to use for the random module. This can be a numerical value or None (default).
+        None means that the random module will be random.
         """
         super().__init__(*args, **kwargs)
+        if seed is not None:
+            self.random = random.Random(seed)
 
         self.num_agents = num_agents
         self.base_infection_chance = base_infection_chance
@@ -412,7 +419,7 @@ class VirusModel(Model):
         self.total_steps = self.schedule.steps + self.virtual_steps
 
 
-def agent_portrayal(agent):
+def agent_portrayal(agent: VirusAgent):
     if agent.quarantine or agent.virus.disease_state is DiseaseState.DECEASED:
         return {}
 
@@ -449,65 +456,65 @@ def agent_portrayal(agent):
 
 
 # Functions for the Datacollector
-def get_infection_rate(model):
+def get_infection_rate(model: VirusModel) -> int:
     return int(np.sum([agent.virus.is_infected() for agent in model.schedule.agents]))
 
 
-def get_death_count(model):
+def get_death_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus.disease_state == DiseaseState.DECEASED for agent in model.schedule.agents]))
 
 
-def get_quarantined_count(model):
+def get_quarantined_count(model: VirusModel) -> int:
     return int(np.sum([agent.quarantine for agent in model.schedule.agents]))
 
 
-def get_healty_count(model):
+def get_healty_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus.disease_state == DiseaseState.HEALTHY for agent in model.schedule.agents]))
 
 
-def get_recovered_count(model):
+def get_recovered_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus.disease_state == DiseaseState.RECOVERED for agent in model.schedule.agents]))
 
 
-def get_infected_count(model):
+def get_infected_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus.disease_state == DiseaseState.INFECTED for agent in model.schedule.agents]))
 
 
-def get_testable_count(model):
+def get_testable_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus.disease_state == DiseaseState.TESTABLE for agent in model.schedule.agents]))
 
 
-def get_infectious_count(model):
+def get_infectious_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus.disease_state == DiseaseState.INFECTIOUS for agent in model.schedule.agents]))
 
 
-def get_symptomatic_count(model):
+def get_symptomatic_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus.disease_state == DiseaseState.SYMPTOMATIC for agent in model.schedule.agents]))
 
 
-def get_tested_count(model):
+def get_tested_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus_test.get_test_stats().get_total_count() for agent in model.schedule.agents]))
 
 
-def get_tested_positive_count(model):
+def get_tested_positive_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus_test.get_test_stats().get_positive_count() for agent in model.schedule.agents]))
 
 
-def get_tested_negative_count(model):
+def get_tested_negative_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus_test.get_test_stats().get_negative_count() for agent in model.schedule.agents]))
 
 
-def get_quarantined_infected(model):
+def get_quarantined_infected(model: VirusModel) -> int:
     return int(np.sum([agent.quarantine & (agent.virus.is_infected()) for agent in model.schedule.agents]))
 
 
-def get_quarantined_healthy(model):
+def get_quarantined_healthy(model: VirusModel) -> int:
     return int(
         np.sum([agent.quarantine & (not agent.virus.is_infected()) for agent in model.schedule.agents]))
 
 
-def get_notquarantined_infected(model):
-    return int(np.sum([(agent.quarantine == False) & (agent.virus.is_infected()) for agent in model.schedule.agents]))
+def get_notquarantined_infected(model: VirusModel) -> int:
+    return int(np.sum([(agent.quarantine is False) & (agent.virus.is_infected()) for agent in model.schedule.agents]))
 
 
 disease_states = [DiseaseState.DECEASED, DiseaseState.HEALTHY, DiseaseState.RECOVERED, DiseaseState.INFECTED,
@@ -518,7 +525,7 @@ class TimeElement(TextElement):
     def __init__(self):
         super().__init__()
 
-    def render(self, model):
+    def render(self, model: VirusModel) -> str:
         days = 1 + int(model.total_steps / 96)
         hours = 9 + int((model.total_steps % 96) / 4)
         quarters = 15 * (model.total_steps % 4)
@@ -540,6 +547,7 @@ DEFAULT_SPREAD_DISTANCE = 2
 DEFAULT_SPREAD_CHANCE = 8
 DEFAULT_DAILY_TEST_CHANCE = 10
 DEFAULT_TEST_DELAY = 5
+DEFAULT_RANDOM_SEED = None
 
 
 # Includes adjustable sliders for the user in the visualization
@@ -560,6 +568,7 @@ model_params = {
     "grid_width": DEFAULT_GRID_WIDTH,
     "grid_height": DEFAULT_GRID_HEIGHT,
     "test_delay": DEFAULT_TEST_DELAY,
+    "seed": DEFAULT_RANDOM_SEED,
     "base_infection_chance": UserSettableParameter("slider", "Base infection probability",
                                                    DEFAULT_BASE_INFECTION_CHANCE, 0, 100, 1),
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)",
@@ -579,6 +588,6 @@ model_params = {
 }
 
 
-def create_grid(width=DEFAULT_GRID_WIDTH, height=DEFAULT_GRID_HEIGHT):
+def create_grid(width: int = DEFAULT_GRID_WIDTH, height: int = DEFAULT_GRID_HEIGHT):
     return CanvasRoomGrid(agent_portrayal, width, height, 900, 900)
 
