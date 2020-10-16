@@ -14,7 +14,6 @@ from virus_test import VirusTest, TestOutcome
 """ TODO list
 Things we still want to program:
 - Change the values for the parameters to more realistic, literature-based values. 
-- Instead of a base infection probability, have a deterministic number of agents being infected at first. This allows for running experiments with the same starting state.
 - Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
 - Add a slider for the number of classrooms and the size of each classroom.
 - Possible addition: add other types of rooms next to lecture rooms, e.g. break room or lab rooms. These would have a different mapping compared to lecture rooms.
@@ -41,7 +40,7 @@ class VirusAgent(Agent):
         self.in_lecture = False
         self.agent_id = unique_id
         self.day_time = 0
-        self.rooster_agent = RoosterAgent(self, model)
+        self.rooster_agent = RoosterAgent(self, self.model)
         self.room = None
         self.seat = None
         self.virus_test = VirusTest(self.model.test_delay, self.model.random)
@@ -49,7 +48,7 @@ class VirusAgent(Agent):
         """
         The day rooster where the agent will sit or walk.
         """
-        self.virus = Virus(self.model.random, model.base_infection_chance)
+        self.virus = self.__create_virus()
         self.quarantine = False
         """
         Keeps track of whether this agent is under quarantine or not
@@ -67,6 +66,26 @@ class VirusAgent(Agent):
         """
         Traces the last contact to each other agent
         """
+
+    def __create_virus(self) -> Virus:
+        """
+        Creates the `Virus` object for this agent.
+        """
+        percentile = self.unique_id / self.model.num_agents
+        if percentile > (self.model.base_infection_rate / 100):
+            state = DiseaseState.HEALTHY
+        else:
+            val = self.unique_id % 4
+            if val == 0:
+                state = DiseaseState.INFECTED
+            elif val == 1:
+                state = DiseaseState.TESTABLE
+            elif val == 2:
+                state = DiseaseState.INFECTIOUS
+            else:
+                state = DiseaseState.SYMPTOMATIC
+
+        return Virus(self.model.random, state)
 
     def enforce_quarantine(self, days: int):
         """
@@ -294,7 +313,7 @@ class VirusAgent(Agent):
 class VirusModel(Model):
     """A model with some number of agents."""
 
-    def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_chance: int,
+    def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
                  test_delay: int, seed: int = None, *args, **kwargs):
         """
@@ -303,7 +322,7 @@ class VirusModel(Model):
         :param num_agents: The number of agents that will participate in the model.
         :param grid_width: The width of the grid.
         :param grid_height: The height of the grid.
-        :param base_infection_chance: The probability of an agent starting with the infection.
+        :param base_infection_rate: The percentage of agents starting with the infection.
         :param spread_distance: The distance the virus can spread to other agents.
         :param spread_chance: The probability of the virus spreading to nearby agents after 1 tick (15 min).
         :param daily_testing_chance: The probability of an agent being tested at the start of each day.
@@ -317,7 +336,7 @@ class VirusModel(Model):
             self.random = random.Random(seed)
 
         self.num_agents = num_agents
-        self.base_infection_chance = base_infection_chance
+        self.base_infection_rate = base_infection_rate
         """
         Describes the chance of an agent being infected at the start of the model
         """
@@ -542,13 +561,12 @@ DEFAULT_GRID_WIDTH = 100
 DEFAULT_GRID_HEIGHT = 100
 DEFAULT_NUM_AGENTS = 800
 DEFAULT_MITIGATION = 'No measures'
-DEFAULT_BASE_INFECTION_CHANCE = 3
+DEFAULT_BASE_INFECTION_RATE = 3
 DEFAULT_SPREAD_DISTANCE = 2
 DEFAULT_SPREAD_CHANCE = 8
 DEFAULT_DAILY_TEST_CHANCE = 10
 DEFAULT_TEST_DELAY = 5
 DEFAULT_RANDOM_SEED = None
-
 
 # Includes adjustable sliders for the user in the visualization
 model_params = {
@@ -569,8 +587,8 @@ model_params = {
     "grid_height": DEFAULT_GRID_HEIGHT,
     "test_delay": DEFAULT_TEST_DELAY,
     "seed": DEFAULT_RANDOM_SEED,
-    "base_infection_chance": UserSettableParameter("slider", "Base infection probability",
-                                                   DEFAULT_BASE_INFECTION_CHANCE, 0, 100, 1),
+    "base_infection_rate": UserSettableParameter("slider", "Base infection rate (%)",
+                                                 DEFAULT_BASE_INFECTION_RATE, 0, 100, 0.1),
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)",
                                              DEFAULT_SPREAD_DISTANCE, 1, 10, 1),
     "spread_chance": UserSettableParameter("slider", "Spread probability", DEFAULT_SPREAD_CHANCE, 1, 100, 1),
@@ -590,4 +608,3 @@ model_params = {
 
 def create_grid(width: int = DEFAULT_GRID_WIDTH, height: int = DEFAULT_GRID_HEIGHT):
     return CanvasRoomGrid(agent_portrayal, width, height, 900, 900)
-

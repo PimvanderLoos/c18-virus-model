@@ -1,3 +1,4 @@
+import os
 from typing import Set, Tuple
 
 
@@ -40,3 +41,13 @@ def get_line_between_points(x_0: int, y_0: int, x_1: int, y_1: int) -> Set[Tuple
             error += dx
             y += y_step
     return coordinates
+
+
+def get_directory(file: str) -> str:
+    directory = file.rstrip(os.sep)
+    if not os.path.exists(directory):
+        raise FileNotFoundError("Path does not exist: \"{}\"!".format(directory))
+
+    if not os.path.isdir(directory):
+        raise NotADirectoryError("Path is not a directory: \"{}\"!".format(directory))
+    return directory

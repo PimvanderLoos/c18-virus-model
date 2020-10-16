@@ -9,8 +9,8 @@ parser = argparse.ArgumentParser(description='Run the model using the provided p
 parser.add_argument('output', type=str, help="The output directory for the results")
 parser.add_argument('--num_agents', type=int, help="The number of agents to use", default=DEFAULT_NUM_AGENTS)
 parser.add_argument('--mitigation', type=str, help="The mitigation method to use", default=DEFAULT_MITIGATION)
-parser.add_argument('--baseInfection', type=int, help="The base infection chance (i.e. the probability of an agent to "
-                                                      "start out as infected)", default=DEFAULT_BASE_INFECTION_CHANCE)
+parser.add_argument('--baseInfection', type=float, help="The base infection rate (i.e. the percentage of agents "
+                                                        "starting out infected)", default=DEFAULT_BASE_INFECTION_RATE)
 parser.add_argument('--spreadChance', type=int, help="The chance of the virus spreading to agents within range per "
                                                      "tick (15 min)", default=DEFAULT_SPREAD_CHANCE)
 parser.add_argument('--spreadDistance', type=int, help="The maximum distance between two agents for them to be able "

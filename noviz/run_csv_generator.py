@@ -10,6 +10,7 @@ import os
 
 import pandas as pd
 
+import util
 from noviz.constants import MODEL_DATA_PATH
 
 
@@ -52,13 +53,7 @@ parser.add_argument('input', type=str, help="The int directory containing multip
                     default=".")
 args = parser.parse_args()
 
-directory = args.input.rstrip(os.sep)
-if not os.path.exists(directory):
-    raise ValueError("Path does not exist: \"{}\"!".format(directory))
-
-if not os.path.isdir(directory):
-    raise ValueError("Path is not a directory: \"{}\"!".format(directory))
-
+directory = util.get_directory(args.input)
 
 statistics_manager = StatisticManager()
 statistics_manager.register_statistic(Statistic("Death count", lambda data: data[['deaths']].iloc[-1]))
