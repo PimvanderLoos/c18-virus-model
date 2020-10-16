@@ -13,7 +13,6 @@ from virus_test import VirusTest, TestOutcome
 """ TODO list
 Things we still want to program:
 - Change the values for the parameters to more realistic, literature-based values. 
-- Next to night-time, also remove weekends from the visualization in the simulation.
 - Instead of a base infection probability, have a deterministic number of agents being infected at first. This allows for running experiments with the same starting state.
 - Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
 - Add a slider for the number of classrooms and the size of each classroom.
@@ -401,6 +400,11 @@ class VirusModel(Model):
         self.datacollector.collect(self)
         if self.schedule.steps % DAY_DURATION == 0:
             self.next_day()
+
+        # Skip weekends
+        if self.day % 7 > 4:
+            self.schedule.steps += DAY_DURATION
+            return  # Just return, everything will be updated on the next call
 
         '''Advance the model by one step.'''
         self.schedule.step()
