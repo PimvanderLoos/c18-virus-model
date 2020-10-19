@@ -6,11 +6,17 @@ and give it the shared folder as argument. It'll then generate the CSV file for 
 """
 
 import argparse
+import inspect
 import os
+import sys
 
 import pandas as pd
 
-import util
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
+from util import get_directory
 from noviz.constants import MODEL_DATA_PATH
 
 
@@ -53,7 +59,7 @@ parser.add_argument('input', type=str, help="The int directory containing multip
                     default=".")
 args = parser.parse_args()
 
-directory = util.get_directory(args.input)
+directory = get_directory(args.input)
 
 statistics_manager = StatisticManager()
 statistics_manager.register_statistic(Statistic("Death count", lambda data: data[['deaths']].iloc[-1]))
