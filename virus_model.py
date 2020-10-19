@@ -3,8 +3,9 @@ import random
 from mesa import Agent, Model
 from mesa.datacollection import DataCollector
 from mesa.time import RandomActivation
+from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
-from mesa.visualization.modules import TextElement
+from mesa.visualization.modules import TextElement, CanvasGridVisualization
 
 from canvas_room_grid import CanvasRoomGrid
 from rooster import *
@@ -315,7 +316,9 @@ class VirusModel(Model):
 
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
-                 test_delay: int, seed: int = None, *args, **kwargs):
+                 test_delay: int, seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None,
+                 server: Optional[ModularServer] = None,
+                 *args, **kwargs):
         """
         Initializes a new Virus Model.
 
@@ -334,6 +337,8 @@ class VirusModel(Model):
         super().__init__(*args, **kwargs)
         if seed is not None:
             self.random = random.Random(seed)
+
+        self.grid_canvas = grid_canvas
 
         self.num_agents = num_agents
         self.base_infection_rate = base_infection_rate
@@ -354,6 +359,12 @@ class VirusModel(Model):
 
         self.schedule = RandomActivation(self)
         self.grid = RoomGrid(grid_width, grid_height, False, room_count=10)
+
+        if self.grid_canvas is not None and server is not None:
+            new_width, new_height = self.grid.get_total_dimensions()
+            print("new width: {}, new height: {}".format(new_width, new_height))
+            self.grid_canvas.updateDimensions(server, new_width, new_height)
+
         self.running = True
         self.day = 0
         self.total_steps = 0
