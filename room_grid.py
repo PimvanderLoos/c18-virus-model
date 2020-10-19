@@ -8,6 +8,16 @@ import numpy as np
 
 from util import *
 
+SNUG_FIT_BUFFER = 10
+"""
+The number of additional tiles to add to the grid when snug_fit is enabled.
+"""
+
+HALLWAY_WIDTH = 3
+"""
+The width of the hallway.
+"""
+
 
 def get_square():
     portrayal = {"Shape": "rect",
@@ -226,14 +236,18 @@ class LectureRoom:
 
 
 class RoomGrid(MultiGrid):
-    def __init__(self, width: int, height: int, torus: bool, room_count: int = 20, room_size: int = 15):
+    def __init__(self, width: int, height: int, torus: bool, room_count: int = 20, room_size: int = 15,
+                 snug_fit: bool = True):
         """
+         :param width: The width of the grid.
+         :param height: The height of the grid.
+         :param torus: Boolean whether the grid wraps or not.
          :param room_count: The number of rooms (excluding break room).
          :param room_size: The size of each regular room (excluding break room).
                     This value describes the length of any one of its walls, as it's a square.
                     This describes the usable area of the each room, so walls are not included.
+         :param snug_fit: Whether to trim the width/height of the grid to the required size.
         """
-        super().__init__(width, height, torus)
         self.room_count = room_count
         self.room_size = room_size + 1  # Add 1 to account for the walls.
         self.room_row_size = math.ceil(math.sqrt(room_count))
@@ -241,11 +255,28 @@ class RoomGrid(MultiGrid):
         self.rooms_list = []
         self.rows = np.empty(self.room_row_size, dtype=object)
         self.generate_rooms()
+        if snug_fit:
+            width, height = self.get_total_dimensions()
+        super().__init__(width, height, torus)
+
+    def get_total_dimensions(self) -> [int, int]:
+        """
+        Returns the total dimensions being used by all the rooms together (including the buffer: `SNUG_FIT_BUFFER`).
+
+        :return: The x and y dimensions.
+        """
+        # For both width and height, add 1 additional square to account for the outer walls.
+        width = self.room_size * self.room_row_size + 1 + SNUG_FIT_BUFFER
+        vertical_room_count = (int(self.room_count / self.room_row_size) +
+                               (0 if self.room_count % self.room_row_size == 0 else 1))
+        vertical_offset = 1 + self.__get_vertical_offset_for_row(vertical_room_count)
+        height = self.room_size * vertical_room_count + vertical_offset + SNUG_FIT_BUFFER
+        return width, height
 
     def generate_rooms(self):
         # Precompute these here so it's easier to find the corresponding row of a given y value later on.
         for row in range(self.room_row_size):
-            vertical_offset = int(math.floor((row + 1) / 2) * 4) if row > 0 else 0
+            vertical_offset = self.__get_vertical_offset_for_row(row)
 
             y_min = row * self.room_size + vertical_offset
             y_max = y_min + self.room_size
@@ -253,6 +284,18 @@ class RoomGrid(MultiGrid):
 
         for room_idx in range(self.room_count):
             self.generate_room(room_idx)
+
+    def __get_vertical_offset_for_row(self, row: int) -> int:
+        """
+        Calculates the vertical offset for a given row.
+
+        This is calculated using the number of the row and the width of the hallways: `HALLWAY_WIDTH`.
+
+        :param row: The row number to get the vertical offset for.
+        :return: The vertical offset for the row in number of squares.
+        """
+        # Add 1 to HALLWAY_WIDTH to account for the additional wall that's required.
+        return int(math.floor((row + 1) / 2) * (HALLWAY_WIDTH + 1)) if row > 0 else 0
 
     def generate_room(self, room_idx: int):
         row = int(math.ceil((room_idx + 1) / self.room_row_size) - 1)
