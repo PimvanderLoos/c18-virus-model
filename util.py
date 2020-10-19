@@ -1,8 +1,10 @@
-import math
+import os
+from typing import Set, Tuple
 
 
-def get_line_between_points(x_0, y_0, x_1, y_1):
-    """ Gets a line between two coordinate pairs represented by a list of tuple[x, y].
+def get_line_between_points(x_0: int, y_0: int, x_1: int, y_1: int) -> Set[Tuple[int, int]]:
+    """
+    Gets a line between two coordinate pairs represented by a list of tuple[x, y].
     The line is found using Bresenham's line algorithm.
     See: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
@@ -12,8 +14,6 @@ def get_line_between_points(x_0, y_0, x_1, y_1):
     :param y_1: The y-coordinate of the second point.
     :return: A list of coordinates that make up the line between the two points.
     """
-
-    print("Drawing line: [{} {}] -> [{} {}]".format(x_0, y_0, x_1, y_1))
 
     coordinates = set()
 
@@ -41,3 +41,13 @@ def get_line_between_points(x_0, y_0, x_1, y_1):
             error += dx
             y += y_step
     return coordinates
+
+
+def get_directory(file: str) -> str:
+    directory = file.rstrip(os.sep)
+    if not os.path.exists(directory):
+        raise FileNotFoundError("Path does not exist: \"{}\"!".format(directory))
+
+    if not os.path.isdir(directory):
+        raise NotADirectoryError("Path is not a directory: \"{}\"!".format(directory))
+    return directory

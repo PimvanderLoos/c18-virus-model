@@ -1,0 +1,10 @@
+# These are just random examples to show how this works.
+# Empty lines and lines starting with '#' are ignored, everything else is treated as an experiment specification.
+
+# The first value is the name of the experiment (please don't use spaces). The name is used for two things:
+# 1) The name of the output directory for the given experiment.
+# 2) The reported name in the generated CSV file if/when that is generated.
+
+simulation_output_no_mitigation --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots
+simulation_output_contact_tracing --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots
+simulation_output_contact_tracing_test_delay_2 --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 2 --random-seed 42 --write-plots
