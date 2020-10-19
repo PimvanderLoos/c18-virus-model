@@ -17,6 +17,7 @@ from virus_test import VirusTest, TestOutcome
 Things we still want to program:
 - Change the values for the parameters to more realistic, literature-based values. 
 - Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
+- For the agent's schedule, the schedule should not be a function of the number of rooms.
 - Possible addition: add other types of rooms next to lecture rooms, e.g. break room or lab rooms. These would have a different mapping compared to lecture rooms.
 - Possible addition: next to contact tracing, more possible mitigation measures: such as social distancing or having a % of agents wearing face masks.
 """
@@ -317,7 +318,8 @@ class VirusModel(Model):
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
                  test_delay: int, seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None,
-                 server: Optional[CustomModularServer] = None, *args, **kwargs):
+                 server: Optional[CustomModularServer] = None, room_count: int = 10, room_size: int = 15,
+                 break_room_size: int = 20, *args, **kwargs):
         """
         Initializes a new Virus Model.
 
@@ -357,8 +359,7 @@ class VirusModel(Model):
         """
 
         self.schedule = RandomActivation(self)
-        self.grid = RoomGrid(grid_width, grid_height, False, room_count=kwargs.get('room_count'),
-                             room_size=kwargs.get('room_size'))
+        self.grid = RoomGrid(grid_width, grid_height, False, room_count, room_size)
 
         if self.grid_canvas is not None and server is not None:
             new_width, new_height = self.grid.get_total_dimensions()

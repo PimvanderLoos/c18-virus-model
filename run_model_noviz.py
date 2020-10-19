@@ -19,6 +19,14 @@ parser.add_argument('--testDelay', type=int, help="The number of days it takes f
                     default=DEFAULT_TEST_DELAY)
 parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                     default=DEFAULT_DAILY_TEST_CHANCE)
+
+parser.add_argument('--room_size', type=int, help="The size of the rooms (this value is squared).",
+                    default=DEFAULT_ROOM_SIZE)
+parser.add_argument('--room_count', type=int, help="The number of class rooms",
+                    default=DEFAULT_ROOM_COUNT)
+parser.add_argument('--break_room_size', type=int, help="The size of the break room.",
+                    default=DEFAULT_BREAK_ROOM_SIZE)
+
 parser.add_argument('--stepCount', type=int, help="The number of steps to simulate", default=2000)
 parser.add_argument('--show-plots', dest='show', help="Show the plots.", action='store_true')
 parser.add_argument('--write-plots', dest='write', help="Write the plots to files", action='store_true')
@@ -50,6 +58,9 @@ file.write("Running with settings: \n"
            "Number of steps: {}\n"
            "Test delay: {}\n"
            "Seed: {}\n"
+           "Room Size: {}\n"
+           "Room Count: {}\n"
+           "Beak Room Size: {}\n"
            .format(directory,
                    args.num_agents,
                    args.mitigation,
@@ -59,11 +70,16 @@ file.write("Running with settings: \n"
                    args.testChance,
                    args.stepCount,
                    args.testDelay,
-                   args.seed))
+                   args.seed,
+                   args.room_size,
+                   args.room_count,
+                   args.break_room_size))
+
 file.close()
 
 model = VirusModel(args.num_agents, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, args.baseInfection,
-                   args.spreadDistance, args.spreadChance, args.testChance, args.mitigation, args.testDelay, args.seed)
+                   args.spreadDistance, args.spreadChance, args.testChance, args.mitigation, args.testDelay, args.seed,
+                   None, None, args.room_count, args.room_size, args.break_room_size)
 
 for step in range(0, args.stepCount):
     model.step()
