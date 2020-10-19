@@ -1,4 +1,3 @@
-from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.modules import CanvasGrid
 from collections import defaultdict
 
@@ -17,15 +16,32 @@ class CanvasRoomGrid(CanvasGrid):
             canvas_height, canvas_width: Size of the canvas to draw in the
                                          client, in pixels. (default: 500x500)
         """
-        super().__init__(portrayal_method, grid_width, grid_height, canvas_width, canvas_height)
+        self.package_includes.append("ResettableCanvasModule.js")
+        self.portrayal_method = portrayal_method
+        self.grid_width = grid_width
+        self.grid_height = grid_height
+        self.canvas_width = canvas_width
+        self.canvas_height = canvas_height
 
-    def updateDimensions(self, server: CustomModularServer, x: int, y: int):
+        new_element = "new ResettableCanvasModule({}, {}, {}, {})".format(
+            self.canvas_width, self.canvas_height, self.grid_width, self.grid_height
+        )
+
+        self.js_code = "elements.push(" + new_element + ");"
+
+    def get_canvas_dimensions(self) -> [int, int]:
+        """
+        Gets the width and height of the canvas.
+        """
+        return self.canvas_width, self.canvas_height
+
+    def update_dimensions(self, server: CustomModularServer, x: int, y: int):
         self.canvas_width = x * 10
         self.canvas_height = y * 10
         self.grid_width = x
         self.grid_height = y
 
-        new_element = "new CanvasModule({}, {}, {}, {})".format(
+        new_element = "new ResettableCanvasModule({}, {}, {}, {})".format(
             self.canvas_width, self.canvas_height, self.grid_width, self.grid_height
         )
 

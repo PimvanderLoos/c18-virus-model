@@ -8,6 +8,7 @@ from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.modules import TextElement, CanvasGridVisualization
 
 from canvas_room_grid import CanvasRoomGrid
+from modular_server import CustomModularServer
 from rooster import *
 from virus import *
 from virus_test import VirusTest, TestOutcome
@@ -16,7 +17,6 @@ from virus_test import VirusTest, TestOutcome
 Things we still want to program:
 - Change the values for the parameters to more realistic, literature-based values. 
 - Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
-- Add a slider for the number of classrooms and the size of each classroom.
 - Possible addition: add other types of rooms next to lecture rooms, e.g. break room or lab rooms. These would have a different mapping compared to lecture rooms.
 - Possible addition: next to contact tracing, more possible mitigation measures: such as social distancing or having a % of agents wearing face masks.
 """
@@ -104,8 +104,8 @@ class VirusAgent(Agent):
             include_center=False,
             radius=1)
         if len(possible_steps) == 0:
-            print("Failed to find position for agent {}: Current position: [{} {}]".format(
-                self.unique_id, self.pos[0], self.pos[1]))
+            # print("Failed to find position for agent {}: Current position: [{} {}]".format(
+            #     self.unique_id, self.pos[0], self.pos[1]))
             return
 
         new_position = self.random.choice(possible_steps)
@@ -317,8 +317,7 @@ class VirusModel(Model):
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
                  test_delay: int, seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None,
-                 server: Optional[ModularServer] = None,
-                 *args, **kwargs):
+                 server: Optional[CustomModularServer] = None, *args, **kwargs):
         """
         Initializes a new Virus Model.
 
@@ -358,12 +357,13 @@ class VirusModel(Model):
         """
 
         self.schedule = RandomActivation(self)
-        self.grid = RoomGrid(grid_width, grid_height, False, room_count=10)
+        self.grid = RoomGrid(grid_width, grid_height, False, room_count=kwargs.get('room_count'),
+                             room_size=kwargs.get('room_size'))
 
         if self.grid_canvas is not None and server is not None:
             new_width, new_height = self.grid.get_total_dimensions()
             print("new width: {}, new height: {}".format(new_width, new_height))
-            self.grid_canvas.updateDimensions(server, new_width, new_height)
+            self.grid_canvas.update_dimensions(server, new_width, new_height)
 
         self.running = True
         self.day = 0
@@ -573,6 +573,9 @@ DEFAULT_GRID_HEIGHT = 100
 DEFAULT_NUM_AGENTS = 800
 DEFAULT_MITIGATION = 'No measures'
 DEFAULT_BASE_INFECTION_RATE = 3
+DEFAULT_ROOM_SIZE = 15
+DEFAULT_ROOM_COUNT = 10
+DEFAULT_BREAK_ROOM_SIZE = 22
 DEFAULT_SPREAD_DISTANCE = 2
 DEFAULT_SPREAD_CHANCE = 8
 DEFAULT_DAILY_TEST_CHANCE = 10
@@ -598,6 +601,12 @@ model_params = {
     "grid_height": DEFAULT_GRID_HEIGHT,
     "test_delay": DEFAULT_TEST_DELAY,
     "seed": DEFAULT_RANDOM_SEED,
+    "room_size": UserSettableParameter("slider", "Room size",
+                                       DEFAULT_ROOM_SIZE, 5, 30, 1),
+    "room_count": UserSettableParameter("slider", "Room count",
+                                        DEFAULT_ROOM_COUNT, 1, 20, 1),
+    "break_room_size": UserSettableParameter("slider", "break room size",
+                                             DEFAULT_BREAK_ROOM_SIZE, 5, 30, 1),
     "base_infection_rate": UserSettableParameter("slider", "Base infection rate (%)",
                                                  DEFAULT_BASE_INFECTION_RATE, 0, 100, 0.1),
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)",
