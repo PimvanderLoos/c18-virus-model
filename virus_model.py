@@ -359,7 +359,7 @@ class VirusModel(Model):
         """
 
         self.schedule = RandomActivation(self)
-        self.grid = RoomGrid(grid_width, grid_height, False, room_count, room_size)
+        self.grid = RoomGrid(grid_width, grid_height, False, room_count=room_count, room_size=room_size, break_room_size=break_room_size)
 
         if self.grid_canvas is not None and server is not None:
             new_width, new_height = self.grid.get_total_dimensions()
@@ -576,7 +576,7 @@ DEFAULT_MITIGATION = 'No measures'
 DEFAULT_BASE_INFECTION_RATE = 3
 DEFAULT_ROOM_SIZE = 15
 DEFAULT_ROOM_COUNT = 10
-DEFAULT_BREAK_ROOM_SIZE = 22
+DEFAULT_BREAK_ROOM_SIZE = 30
 DEFAULT_SPREAD_DISTANCE = 2
 DEFAULT_SPREAD_CHANCE = 8
 DEFAULT_DAILY_TEST_CHANCE = 10
@@ -607,7 +607,7 @@ model_params = {
     "room_count": UserSettableParameter("slider", "Room count",
                                         DEFAULT_ROOM_COUNT, 1, 20, 1),
     "break_room_size": UserSettableParameter("slider", "break room size",
-                                             DEFAULT_BREAK_ROOM_SIZE, 5, 30, 1),
+                                             DEFAULT_BREAK_ROOM_SIZE, 5, 60, 1),
     "base_infection_rate": UserSettableParameter("slider", "Base infection rate (%)",
                                                  DEFAULT_BASE_INFECTION_RATE, 0, 100, 0.1),
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)",
