@@ -318,7 +318,8 @@ class VirusModel(Model):
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
                  test_delay: int, seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None,
-                 server: Optional[CustomModularServer] = None, *args, **kwargs):
+                 server: Optional[CustomModularServer] = None, room_count: int = 10, room_size: int = 15,
+                 break_room_size: int = 20, *args, **kwargs):
         """
         Initializes a new Virus Model.
 
@@ -358,8 +359,7 @@ class VirusModel(Model):
         """
 
         self.schedule = RandomActivation(self)
-        self.grid = RoomGrid(grid_width, grid_height, False, room_count=kwargs.get('room_count'),
-                             room_size=kwargs.get('room_size'))
+        self.grid = RoomGrid(grid_width, grid_height, False, room_count, room_size)
 
         if self.grid_canvas is not None and server is not None:
             new_width, new_height = self.grid.get_total_dimensions()
