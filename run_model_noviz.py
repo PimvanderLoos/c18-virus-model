@@ -19,14 +19,12 @@ parser.add_argument('--testDelay', type=int, help="The number of days it takes f
                     default=DEFAULT_TEST_DELAY)
 parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                     default=DEFAULT_DAILY_TEST_CHANCE)
-
 parser.add_argument('--room_size', type=int, help="The size of the rooms (this value is squared).",
                     default=DEFAULT_ROOM_SIZE)
 parser.add_argument('--room_count', type=int, help="The number of class rooms",
                     default=DEFAULT_ROOM_COUNT)
 parser.add_argument('--break_room_size', type=int, help="The size of the break room.",
                     default=DEFAULT_BREAK_ROOM_SIZE)
-
 parser.add_argument('--stepCount', type=int, help="The number of steps to simulate", default=2000)
 parser.add_argument('--show-plots', dest='show', help="Show the plots.", action='store_true')
 parser.add_argument('--write-plots', dest='write', help="Write the plots to files", action='store_true')
