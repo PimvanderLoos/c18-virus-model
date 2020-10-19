@@ -1,0 +1,16 @@
+Implementation:
+1. Implement spread distance and chance from theory.
+2. Chance the simulation so that the time it takes until agent is pulled out of simulation is more realistic
+    Or let it be instant in one step.
+3. Change that all infected people can die and not only the positive tested agents.
+4. Include formal testing on the results of the simulation.
+5. Choose the length of the simulation.
+
+Raport:
+  1. Research on spread chance and distance. 
+  2. Research how long it would take before an agent would be tested and until the other agent will get pulled out of the simulation.
+      We can look up how the corona apps in NL and DE work says Malvin.
+  3. Show reults of formal tests and use as argument which measures work well in which case.
+    This formal testing explenation should be explained in the expeprimental design, choose t-test, wilcoxon or maybe ANOVA. 
+    
+    
