@@ -17,6 +17,7 @@ from virus_test import VirusTest, TestOutcome
 Things we still want to program:
 - Change the values for the parameters to more realistic, literature-based values. 
 - Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
+- For the agent's schedule, the schedule should not be a function of the number of rooms.
 - Possible addition: add other types of rooms next to lecture rooms, e.g. break room or lab rooms. These would have a different mapping compared to lecture rooms.
 - Possible addition: next to contact tracing, more possible mitigation measures: such as social distancing or having a % of agents wearing face masks.
 """
