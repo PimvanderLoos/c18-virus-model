@@ -31,13 +31,13 @@ def get_square():
 
 def seat_portrayal():
     portrayal = get_square()
-    portrayal["Color"] = "brown"
+    portrayal["Color"] = "rgba(99, 44, 4, 0.4)"
     return portrayal
 
 
 def wall_portrayal():
     portrayal = get_square()
-    portrayal["Color"] = "grey"
+    portrayal["Color"] = "rgba(0, 0, 0, 0.65)"
     return portrayal
 
 
