@@ -9,7 +9,7 @@ import numpy as np
 
 from util import *
 
-SNUG_FIT_BUFFER = 10
+SNUG_FIT_BUFFER = 5
 """
 The number of additional tiles to add to the grid when snug_fit is enabled.
 """
@@ -172,6 +172,7 @@ class BreakRoom(Room):
         """
         super().__init__(room_id, x_min, y_min, x_max, y_max, entry_side)
         self.height = y_max - y_min
+        self.width = x_max - x_min
 
     def get_room_type(self):
         return RoomType.BREAK_ROOM
@@ -333,6 +334,7 @@ class RoomGrid(MultiGrid):
         self.rows = np.empty(self.room_row_size + 1, dtype=object)
         self.vertical_room_count = 0
         self.generate_rooms()
+
         if snug_fit:
             width, height = self.get_total_dimensions()
         super().__init__(width, height, torus)
@@ -343,11 +345,13 @@ class RoomGrid(MultiGrid):
 
         :return: The x and y dimensions.
         """
-        # For both width and height, add 1 additional square to account for the outer walls.
-        width = self.room_size * self.room_row_size + 1 + SNUG_FIT_BUFFER
+        # For width, add 2 additional square to account for the outer walls.
+        width = max(self.break_room.width, self.room_size * self.room_row_size) + 2 + SNUG_FIT_BUFFER
         lecture_rooms_height = self._get_vertical_lecture_height()
         break_room_height = self.break_room.height + HALLWAY_WIDTH
-        height = lecture_rooms_height + break_room_height + SNUG_FIT_BUFFER
+        # For height, only add 1 (already added by _get_vertical_lecture_height), because there's no additional wall
+        # at the top.
+        height = lecture_rooms_height + break_room_height
         return width, height
 
     def _get_vertical_lecture_height(self) -> int:
@@ -406,7 +410,7 @@ class RoomGrid(MultiGrid):
         self.rooms_list.append(r)
 
     def generate_break_room(self):
-        y_min = self.rows[self.vertical_room_count - 1][1] + HALLWAY_WIDTH
+        y_min = self.rows[self.vertical_room_count - 1][1] + HALLWAY_WIDTH + 1
         y_max = y_min + int(self.break_room_size / 1.5)
         x_min = 0
         x_max = x_min + int(self.break_room_size * 1.5)
@@ -482,6 +486,19 @@ class RoomGrid(MultiGrid):
             return None
         return self.rooms_list[room_id]
 
+    def get_break_room(self, x: int, y: int) -> Optional[BreakRoom]:
+        """
+        Attempts to get the break room if it exists at the given coordinates.
+
+        :param x: The x-coordinate to check.
+        :param y: The y-coordinate to check.
+        :return: The break room at the given coordinates, if it exists there. Otherwise None.
+        """
+        row_coordinates = self.rows[self.vertical_room_count]
+        if not (row_coordinates[0] <= y <= row_coordinates[1]):
+            return None
+        return self.break_room if self.break_room.x_min <= x <= self.break_room.x_max else None
+
     def get_room(self, x: int, y: int) -> Optional[Room]:
         """
         Gets the room at a given point. Note that this does include the walls!
@@ -490,10 +507,9 @@ class RoomGrid(MultiGrid):
         :param y: The y-coordinate to check.
         :return: The room at the given coordinates, if one such room could be found. Otherwise None.
         """
-        # TODO: Break room might be bigger than combined lecture rooms.
         col = math.ceil(x / self.room_size) - 1
         if col > (self.room_row_size - 1):
-            return None
+            return self.get_break_room(x, y)
 
         row = -1
         for row_idx in range(self.vertical_room_count + 1):
@@ -504,10 +520,9 @@ class RoomGrid(MultiGrid):
         if row == -1:
             return None
 
-        # If the row is room_row_size, it's on the row of the break room,
-        # which has only a single column.
-        if row == self.vertical_room_count:
-            col = 0
+        # If the row is vertical_room_count, it's on the row of the break room.
+        if row == self.vertical_room_count and self.break_room.x_min <= x <= self.break_room.x_max:
+            return self.break_room
 
         return self.rooms[row][col]
 

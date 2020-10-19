@@ -576,7 +576,7 @@ DEFAULT_MITIGATION = 'No measures'
 DEFAULT_BASE_INFECTION_RATE = 3
 DEFAULT_ROOM_SIZE = 15
 DEFAULT_ROOM_COUNT = 10
-DEFAULT_BREAK_ROOM_SIZE = 30
+DEFAULT_BREAK_ROOM_SIZE = 43
 DEFAULT_SPREAD_DISTANCE = 2
 DEFAULT_SPREAD_CHANCE = 8
 DEFAULT_DAILY_TEST_CHANCE = 10
@@ -603,11 +603,11 @@ model_params = {
     "test_delay": DEFAULT_TEST_DELAY,
     "seed": DEFAULT_RANDOM_SEED,
     "room_size": UserSettableParameter("slider", "Room size",
-                                       DEFAULT_ROOM_SIZE, 5, 30, 1),
+                                       DEFAULT_ROOM_SIZE, 5, 40, 1),
     "room_count": UserSettableParameter("slider", "Room count",
                                         DEFAULT_ROOM_COUNT, 1, 20, 1),
     "break_room_size": UserSettableParameter("slider", "break room size",
-                                             DEFAULT_BREAK_ROOM_SIZE, 5, 60, 1),
+                                             DEFAULT_BREAK_ROOM_SIZE, 5, 80, 1),
     "base_infection_rate": UserSettableParameter("slider", "Base infection rate (%)",
                                                  DEFAULT_BASE_INFECTION_RATE, 0, 100, 0.1),
     "spread_distance": UserSettableParameter("slider", "Spread distance (in meters)",
