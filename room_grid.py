@@ -434,7 +434,8 @@ class RoomGrid(MultiGrid):
             return False
         return room.is_wall(x, y)
 
-    def is_available(self, x: int, y: int, allowed_in_rooms: bool = True) -> bool:
+    # TODO: Remove the whole 'allowed_in_rooms' stuff; now that there's a break room, it's not used anymore.
+    def is_available(self, x: int, y: int, allowed_in_rooms: bool = True, break_room_required: bool = False) -> bool:
         """
         Checks if the given position is available. I.e. it's not a wall or a seat.
 
@@ -442,6 +443,7 @@ class RoomGrid(MultiGrid):
         :param y: The y-coordinate.
         :param allowed_in_rooms: Whether or not to consider lecture rooms as available or not. When set to False, this
                                  method will consider any position in any room to be unavailable.
+        :param break_room_required: Whether or not the position has to be inside a break room.
         :return: True if the position is available.
         """
         if self.is_edge(x, y):
@@ -454,11 +456,11 @@ class RoomGrid(MultiGrid):
         if room.is_wall(x, y):
             return False
 
-        if allowed_in_rooms:
-            return True
-
         if room.get_room_type() == RoomType.BREAK_ROOM:
             return True
+
+        if break_room_required:
+            return False
 
         return room.is_available(x, y)
 
@@ -523,18 +525,30 @@ class RoomGrid(MultiGrid):
                 return True
         return False
 
-    def get_random_pos(self, random: Random, allowed_in_rooms: bool = False) -> [int, int]:
+    def get_random_pos(self, random: Random, allowed_in_rooms: bool = False, in_break_room: bool = False) -> [int, int]:
         """
         Gets a random available position on this grid. See #is_available for more information
 
         :param random: The random object to use to get random values.
-        :param allowed_in_rooms: True to allow the selected positions to be inside rooms.
+        :param allowed_in_rooms: True to allow the selected positions to be inside lecture rooms.
+        :param in_break_room: When true, only positions inside the break room are considered.
         :return: A random available position on this grid.
         """
+        if in_break_room:
+            x_min = self.break_room.x_min + 1
+            x_max = self.break_room.x_max - 1
+            y_min = self.break_room.y_min + 1
+            y_max = self.break_room.y_max - 1
+        else:
+            x_min = 1
+            x_max = self.width - 1
+            y_min = 1
+            y_max = self.height - 1
+
         pos_x = pos_y = 0
         while not self.is_available(pos_x, pos_y, allowed_in_rooms):
-            pos_x = random.randrange(self.width)
-            pos_y = random.randrange(self.height)
+            pos_x = random.randrange(x_min, x_max)
+            pos_y = random.randrange(y_min, y_max)
         return pos_x, pos_y
 
     def get_neighborhood(
@@ -544,6 +558,7 @@ class RoomGrid(MultiGrid):
             include_center: bool = False,
             radius: int = 1,
             allowed_in_rooms: bool = False,
+            in_break_room: bool = False,
     ) -> List[Coordinate]:
         """ Return a list of cells that are in the neighborhood of a
         certain point.
@@ -557,7 +572,8 @@ class RoomGrid(MultiGrid):
             include_center: If True, return the (x, y) cell as well.
                             Otherwise, return surrounding cells only.
             radius: radius, in cells, of neighborhood to get.
-            allowed_in_rooms: True to allow the agents to walk around freely inside the rooms.
+            allowed_in_rooms: True to allow the agents to walk around freely inside the lecture rooms.
+            in_break_room: True to only look at positions inside the break room.
 
         Returns:
             A list of coordinate tuples representing the neighborhood;
@@ -565,7 +581,8 @@ class RoomGrid(MultiGrid):
             if not including the center).
 
         """
-        return list(self.iter_neighborhood(pos, moore, include_center, radius, allowed_in_rooms))
+        return list(self.iter_neighborhood(pos, moore, include_center, radius, allowed_in_rooms,
+                                           in_break_room=in_break_room))
 
     def iter_neighborhood(
             self,
@@ -574,6 +591,7 @@ class RoomGrid(MultiGrid):
             include_center: bool = False,
             radius: int = 1,
             allowed_in_rooms: bool = False,
+            in_break_room: bool = False,
     ) -> Iterator[Coordinate]:
         """ Return an iterator over cell coordinates that are in the
         neighborhood of a certain point.
@@ -588,6 +606,7 @@ class RoomGrid(MultiGrid):
                             Otherwise, return surrounding cells only.
             radius: radius, in cells, of neighborhood to get.
             allowed_in_rooms: True to allow the agents to walk around freely inside the rooms.
+            in_break_room: True to only look at positions inside the break room.
 
         Returns:
             A list of coordinate tuples representing the neighborhood. For
@@ -614,7 +633,7 @@ class RoomGrid(MultiGrid):
                 px, py = self.torus_adj((x + dx, y + dy))
 
                 # Skip if new coords out of bounds or not available.
-                if self.out_of_bounds((px, py)) or not self.is_available(px, py, allowed_in_rooms):
+                if self.out_of_bounds((px, py)) or not self.is_available(px, py, allowed_in_rooms, in_break_room):
                     continue
 
                 coords = (px, py)

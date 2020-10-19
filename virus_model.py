@@ -3,9 +3,8 @@ import random
 from mesa import Agent, Model
 from mesa.datacollection import DataCollector
 from mesa.time import RandomActivation
-from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
-from mesa.visualization.modules import TextElement, CanvasGridVisualization
+from mesa.visualization.modules import TextElement
 
 from canvas_room_grid import CanvasRoomGrid
 from modular_server import CustomModularServer
@@ -103,7 +102,7 @@ class VirusAgent(Agent):
             self.pos,
             moore=True,
             include_center=False,
-            radius=1)
+            radius=1, in_break_room=True)
         if len(possible_steps) == 0:
             # print("Failed to find position for agent {}: Current position: [{} {}]".format(
             #     self.unique_id, self.pos[0], self.pos[1]))
@@ -250,7 +249,7 @@ class VirusAgent(Agent):
         Moves this agent to a random position on the grid. Note that only 'valid' positions are considered
         (see RoomGrid#is_available(int, int, False).
         """
-        (pos_x, pos_y) = self.model.grid.get_random_pos(self.random)
+        (pos_x, pos_y) = self.model.grid.get_random_pos(self.random, in_break_room=self.room is None)
 
         # If the agent doesn't exist on the grid at the moment, place them.
         # Otherwise, move them. This is required, because move has to remove the agent
@@ -359,7 +358,8 @@ class VirusModel(Model):
         """
 
         self.schedule = RandomActivation(self)
-        self.grid = RoomGrid(grid_width, grid_height, False, room_count=room_count, room_size=room_size, break_room_size=break_room_size)
+        self.grid = RoomGrid(grid_width, grid_height, False, room_count=room_count,
+                             room_size=room_size, break_room_size=break_room_size)
 
         if self.grid_canvas is not None and server is not None:
             new_width, new_height = self.grid.get_total_dimensions()
