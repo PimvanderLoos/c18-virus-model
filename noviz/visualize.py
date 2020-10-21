@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator, MultipleLocator
 
 
 class Visualizer:
@@ -47,6 +48,11 @@ class Visualizer:
         data = self.data[['infected', 'deaths', 'quarantined']]
         colors = ["red", "black", "gold"]
         data.plot(color=colors)
+
+        plt.xlabel("Number of Steps")
+        plt.ylabel("Number of Agents")
+        plt.title("Effects on Agents' Lives vs Time")
+
         self.__handle_result("basic.png")
 
     def visualize_disease_states(self) -> None:
@@ -56,6 +62,11 @@ class Visualizer:
         data = self.data[['healthy', 'just infected', 'testable', 'infectious', 'symptomatic', 'recovered']]
         colors = ["green", "blue", "fuchsia", "red", "darkred", "darkturquoise"]
         data.plot(color=colors)
+
+        plt.xlabel("Number of Steps")
+        plt.ylabel("Number of Agents")
+        plt.title("Disease Progression vs Time")
+
         self.__handle_result("disease_state.png")
 
     def visualize_quarantined(self) -> None:
@@ -65,6 +76,11 @@ class Visualizer:
         data = self.data[['quarantined: infected', 'quarantined: healthy', 'not quarantined: infected']]
         colors = ["green", "gold", "red"]
         data.plot(color=colors)
+
+        plt.xlabel("Number of Steps")
+        plt.ylabel("Number of Agents")
+        plt.title("Quarantine vs time")
+
         self.__handle_result("quarantine.png")
 
     def visualize_testing(self) -> None:
@@ -74,4 +90,9 @@ class Visualizer:
         data = self.data[['tested total', 'tested positive', 'tested negative']]
         colors = ["black", "blue", "red"]
         data.plot(color=colors)
+
+        plt.xlabel("Number of Steps")
+        plt.ylabel("Number of Tests")
+        plt.title("Testing vs Time")
+
         self.__handle_result("testing.png")

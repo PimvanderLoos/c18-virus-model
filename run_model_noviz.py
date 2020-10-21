@@ -34,7 +34,7 @@ parser.add_argument('--random-seed', type=int, dest='seed', help="The seed to us
 args = parser.parse_args()
 
 # Completely arbitrary value
-minimum_step_count = 10
+minimum_step_count = 22
 if args.stepCount < minimum_step_count:
     raise ValueError("Please select at least {} steps.".format(minimum_step_count))
 
