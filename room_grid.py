@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from random import Random
 from typing import Iterator, List, Optional
 
+import typing
 from mesa.space import MultiGrid, Coordinate
 from enum import Enum
 import numpy as np
@@ -67,6 +68,11 @@ class RoomType(Enum):
 
 
 class Seat:
+    """
+    Represents a seat at a given x/y coordinate.
+
+    A seat may be available or unavailable. It is up to the user of this class to respect this.
+    """
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
@@ -151,7 +157,7 @@ class Room(ABC):
         return None
 
     @abstractmethod
-    def get_room_type(self):
+    def get_room_type(self) -> RoomType:
         """
         Gets the type of room this is. See `RoomType`.
 
@@ -174,12 +180,9 @@ class BreakRoom(Room):
         self.height = y_max - y_min
         self.width = x_max - x_min
 
+    # Override
     def get_room_type(self):
         return RoomType.BREAK_ROOM
-
-    # def get_portrayal(self, x: int, y: int):
-    #     if self.is_in_room(x, y):
-    #         return seat_portrayal()
 
 
 class LectureRoom(Room):
@@ -230,8 +233,9 @@ class LectureRoom(Room):
         self.y_max_seat = self.y_max - 2 - y_max_seat_offset
 
         self.seats = []
-        self.populate_seats()
+        self.__populate_seats()
 
+    # Override
     def get_room_type(self):
         return RoomType.LECTURE_ROOM
 
@@ -245,19 +249,34 @@ class LectureRoom(Room):
         return len(self.seats)
 
     def room_available(self) -> bool:
+        """
+        Checks if there is at least 1 `Seat` available in this room.
+
+        :return: True if there are 1 or more available seats in this room.
+        """
         for seat in self.seats:
             if seat.available:
                 return True
         return False
 
-    def populate_seats(self):
+    def __populate_seats(self) -> None:
+        """
+        Populates the list of seats with new `Seat` objects.
+        """
         for x in range(self.x_min_seat, self.x_max_seat + 1):
             for y in range(self.y_min_seat, self.y_max_seat + 1):
                 self.seats.append(Seat(x, y))
 
     def is_lecturer_area(self, x: int, y: int) -> bool:
-        return self.x_min_lecturer_area <= x <= self.x_max_lecturer_area and \
-               self.y_min_lecturer_area <= y <= self.y_max_lecturer_area
+        """
+        Checks if the position is in the 'lecturer area', which is the space between the seats and the door.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: True if the position lies in the lecturer area.
+        """
+        return (self.x_min_lecturer_area <= x <= self.x_max_lecturer_area and
+                self.y_min_lecturer_area <= y <= self.y_max_lecturer_area)
 
     def is_seat(self, x: int, y: int) -> bool:
         """
@@ -267,7 +286,8 @@ class LectureRoom(Room):
         :param y: The y-coordinate.
         :return: True if the given position is a seat.
         """
-        return self.x_min_seat <= x <= self.x_max_seat and self.y_min_seat <= y <= self.y_max_seat
+        return (self.x_min_seat <= x <= self.x_max_seat and
+                self.y_min_seat <= y <= self.y_max_seat)
 
     def is_available(self, x: int, y: int) -> bool:
         """
@@ -333,7 +353,7 @@ class RoomGrid(MultiGrid):
         self.rooms_list = []
         self.rows = np.empty(self.room_row_size + 1, dtype=object)
         self.vertical_room_count = 0
-        self.generate_rooms()
+        self.__generate_rooms()
 
         if snug_fit:
             width, height = self.get_total_dimensions()
@@ -356,12 +376,17 @@ class RoomGrid(MultiGrid):
 
     def _get_vertical_lecture_height(self) -> int:
         """
-        Gets the vertical space taken up by the lecture rooms.
+        Gets the vertical space taken up by the lecture rooms, including the walkways between them.
+
+        :return: The vertical space taken up by the lecture rooms.
         """
         vertical_offset = 1 + self.__get_vertical_offset_for_row(self.vertical_room_count - 1)
         return self.room_size * self.vertical_room_count + vertical_offset
 
-    def generate_rooms(self):
+    def __generate_rooms(self) -> None:
+        """
+        Generates all the lecture rooms as well as the break room.
+        """
         # Precompute these here so it's easier to find the corresponding row of a given y value later on.
         for row in range(self.room_row_size):
             vertical_offset = self.__get_vertical_offset_for_row(row)
@@ -371,9 +396,9 @@ class RoomGrid(MultiGrid):
             self.rows[row] = (y_min, y_max)
 
         for room_idx in range(self.room_count):
-            self.generate_lecture_room(room_idx)
+            self.__generate_lecture_room(room_idx)
 
-        self.generate_break_room()
+        self.__generate_break_room()
 
     def __get_vertical_offset_for_row(self, row: int) -> int:
         """
@@ -387,7 +412,13 @@ class RoomGrid(MultiGrid):
         # Add 1 to HALLWAY_WIDTH to account for the additional wall that's required.
         return int(math.floor((row + 1) / 2) * (HALLWAY_WIDTH + 1)) if row > 0 else 0
 
-    def generate_lecture_room(self, room_idx: int):
+    def __generate_lecture_room(self, room_idx: int) -> None:
+        """
+        Generates a new lecture room.
+
+        :param room_idx: The unique ID of the room that will be generated. This value is also used to
+        determine the location of the room.
+        """
         row = int(math.ceil((room_idx + 1) / self.room_row_size) - 1)
         col = int((room_idx + 1) - (row * self.room_row_size) - 1)
 
@@ -409,7 +440,10 @@ class RoomGrid(MultiGrid):
         self.rooms[row][col] = r
         self.rooms_list.append(r)
 
-    def generate_break_room(self):
+    def __generate_break_room(self) -> None:
+        """
+        Generates the break room.
+        """
         y_min = self.rows[self.vertical_room_count - 1][1] + HALLWAY_WIDTH + 1
         y_max = y_min + int(self.break_room_size / 1.5)
         x_min = 0
@@ -420,6 +454,14 @@ class RoomGrid(MultiGrid):
         self.break_room = room
 
     def is_edge(self, x: int, y: int) -> bool:
+        """
+        Checks if the given x/y coordinate pair lies on the edge of the map. When true,
+        it means that the given position is a wall, as the map has a ring of walls around it.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: True if the given x/y coordinate pair lies on the edge of the map.
+        """
         return x == 0 or y == 0 or x == (self.width - 1) or y == (self.height - 1)
 
     def is_wall(self, x: int, y: int) -> bool:
@@ -438,15 +480,12 @@ class RoomGrid(MultiGrid):
             return False
         return room.is_wall(x, y)
 
-    # TODO: Remove the whole 'allowed_in_rooms' stuff; now that there's a break room, it's not used anymore.
-    def is_available(self, x: int, y: int, allowed_in_rooms: bool = True, break_room_required: bool = False) -> bool:
+    def is_available(self, x: int, y: int, break_room_required: bool = False) -> bool:
         """
         Checks if the given position is available. I.e. it's not a wall or a seat.
 
         :param x: The x-coordinate.
         :param y: The y-coordinate.
-        :param allowed_in_rooms: Whether or not to consider lecture rooms as available or not. When set to False, this
-                                 method will consider any position in any room to be unavailable.
         :param break_room_required: Whether or not the position has to be inside a break room.
         :return: True if the position is available.
         """
@@ -463,12 +502,22 @@ class RoomGrid(MultiGrid):
         if room.get_room_type() == RoomType.BREAK_ROOM:
             return True
 
+        # It has to be a LectureRoom now.
+        room = typing.cast(LectureRoom, room)
+
         if break_room_required:
             return False
 
         return room.is_available(x, y)
 
     def get_portrayal(self, x: int, y: int):
+        """
+        Gets the portrayal of the square at the given x/y coordinate pair.
+
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: The portrayal of the square at the given x/y coordinate pair.
+        """
         if self.is_edge(x, y):
             return wall_portrayal()
 
@@ -540,12 +589,11 @@ class RoomGrid(MultiGrid):
                 return True
         return False
 
-    def get_random_pos(self, random: Random, allowed_in_rooms: bool = False, in_break_room: bool = False) -> [int, int]:
+    def get_random_pos(self, random: Random, in_break_room: bool = False) -> [int, int]:
         """
         Gets a random available position on this grid. See #is_available for more information
 
         :param random: The random object to use to get random values.
-        :param allowed_in_rooms: True to allow the selected positions to be inside lecture rooms.
         :param in_break_room: When true, only positions inside the break room are considered.
         :return: A random available position on this grid.
         """
@@ -561,7 +609,7 @@ class RoomGrid(MultiGrid):
             y_max = self.height - 1
 
         pos_x = pos_y = 0
-        while not self.is_available(pos_x, pos_y, allowed_in_rooms):
+        while not self.is_available(pos_x, pos_y):
             pos_x = random.randrange(x_min, x_max)
             pos_y = random.randrange(y_min, y_max)
         return pos_x, pos_y
@@ -572,7 +620,6 @@ class RoomGrid(MultiGrid):
             moore: bool,
             include_center: bool = False,
             radius: int = 1,
-            allowed_in_rooms: bool = False,
             in_break_room: bool = False,
     ) -> List[Coordinate]:
         """ Return a list of cells that are in the neighborhood of a
@@ -587,7 +634,6 @@ class RoomGrid(MultiGrid):
             include_center: If True, return the (x, y) cell as well.
                             Otherwise, return surrounding cells only.
             radius: radius, in cells, of neighborhood to get.
-            allowed_in_rooms: True to allow the agents to walk around freely inside the lecture rooms.
             in_break_room: True to only look at positions inside the break room.
 
         Returns:
@@ -596,8 +642,7 @@ class RoomGrid(MultiGrid):
             if not including the center).
 
         """
-        return list(self.iter_neighborhood(pos, moore, include_center, radius, allowed_in_rooms,
-                                           in_break_room=in_break_room))
+        return list(self.iter_neighborhood(pos, moore, include_center, radius, in_break_room=in_break_room))
 
     def iter_neighborhood(
             self,
@@ -605,7 +650,6 @@ class RoomGrid(MultiGrid):
             moore: bool,
             include_center: bool = False,
             radius: int = 1,
-            allowed_in_rooms: bool = False,
             in_break_room: bool = False,
     ) -> Iterator[Coordinate]:
         """ Return an iterator over cell coordinates that are in the
@@ -620,7 +664,6 @@ class RoomGrid(MultiGrid):
             include_center: If True, return the (x, y) cell as well.
                             Otherwise, return surrounding cells only.
             radius: radius, in cells, of neighborhood to get.
-            allowed_in_rooms: True to allow the agents to walk around freely inside the rooms.
             in_break_room: True to only look at positions inside the break room.
 
         Returns:
@@ -648,7 +691,7 @@ class RoomGrid(MultiGrid):
                 px, py = self.torus_adj((x + dx, y + dy))
 
                 # Skip if new coords out of bounds or not available.
-                if self.out_of_bounds((px, py)) or not self.is_available(px, py, allowed_in_rooms, in_break_room):
+                if self.out_of_bounds((px, py)) or not self.is_available(px, py, in_break_room):
                     continue
 
                 coords = (px, py)
