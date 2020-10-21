@@ -1,5 +1,4 @@
 import argparse
-import os
 
 from noviz.constants import MODEL_DATA_PATH
 from noviz.visualize import Visualizer

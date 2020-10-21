@@ -71,7 +71,6 @@ class RoosterModel:
         if not room.room_available():
             return self.get_random_room_id()
 
-        room.is_reserved = True
         return room_id, room
 
     def __space_available_in_room(self, timeslot: int, room: LectureRoom, room_id: int) -> bool:

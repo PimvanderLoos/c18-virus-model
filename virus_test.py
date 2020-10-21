@@ -1,6 +1,8 @@
 from enum import Enum
 from random import Random
 
+from typing import List
+
 from virus import Virus
 
 RESULT_ACTIVE_DAY = 7
@@ -68,13 +70,24 @@ class TestResult:
 
 
 class TestStatistics:
+    """
+    This class keeps track of all the tests that have been performed for the entire duration of the model.
+    """
     def __init__(self):
         self.__total = 0
         self.__positive = 0
         self.__negative = 0
         self.__pending = 0
 
-    def add_test_result(self, outcome: TestOutcome):
+    def add_test_result(self, outcome: TestOutcome) -> None:
+        """
+        Adds the result of a test to the statistics.
+
+        When adding a result, the number of pending results is decremented,
+        so make that that the result was be registered first.
+
+        :param outcome: The result of the test.
+        """
         if outcome == TestOutcome.POSITIVE:
             self.__positive += 1
         elif outcome == TestOutcome.NEGATIVE:
@@ -83,7 +96,10 @@ class TestStatistics:
             raise ValueError("Trying to add test statistic for untested result. This is invalid.")
         self.__pending -= 1
 
-    def register_new_result(self):
+    def register_new_result(self) -> None:
+        """
+        Registers a new result. Registering simply means added the result as pending.
+        """
         self.__pending += 1
         self.__total += 1
 
@@ -135,10 +151,10 @@ class VirusTest:
         self.random = random
         self.false_negative_rate = false_negative_rate
         self.false_positive_rate = false_positive_rate
-        self.__test_queue = []
+        self.__test_queue: List[TestResult] = []
         self.test_stats = TestStatistics()
 
-    def new_day(self, day: int):
+    def new_day(self, day: int) -> None:
         """
         Handles the start of a new day.
 
@@ -181,7 +197,7 @@ class VirusTest:
             return self.__test_queue[0].get_result(day)
         return TestOutcome.UNTESTED
 
-    def perform_test(self, day: int, virus_state: Virus):
+    def perform_test(self, day: int, virus_state: Virus) -> None:
         """
         Performs a test using a given `Virus` object.
 

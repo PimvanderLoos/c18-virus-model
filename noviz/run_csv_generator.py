@@ -9,6 +9,7 @@ import argparse
 import inspect
 import os
 import sys
+from typing import List
 
 import pandas as pd
 
@@ -67,7 +68,7 @@ class StatisticManager:
     Represents a set of statistics to be generated from an experiment.
     """
     def __init__(self):
-        self.__statistics = []
+        self.__statistics: List[Statistic] = []
         self.__data = [[]]
 
     def register_statistic(self, statistic: Statistic) -> None:

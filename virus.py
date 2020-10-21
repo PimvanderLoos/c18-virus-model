@@ -128,6 +128,13 @@ class Virus:
         self.__next_disease_update = day + self.__get_next_update()
 
     def __get_next_update(self) -> int:
+        """
+        Gets the number of days between the current state and the next state.
+
+        If the amount is considered infinite, 9999 will be returned.
+
+        :return: The number of days between the current state and the next state.
+        """
         if self.disease_state < DiseaseState.INFECTED:
             return 9999
 
@@ -207,12 +214,26 @@ class DiseaseState(Enum):
     """
 
     def next(self) -> 'DiseaseState':
+        """
+        Gets the `DiseaseState` that follows the current one, if one such state exists.
+
+        If the current state is the last one, a ValueError will be raised.
+
+        :return: The `DiseaseState` that follows the current one.
+        """
         new = self.value + 1
         if new > 7:
             raise ValueError('Enumeration ended')
         return DiseaseState(new)
 
     def previous(self) -> 'DiseaseState':
+        """
+        Gets the `DiseaseState` that precedes the current one, if one such state exists.
+
+        If the current state is the first one, a ValueError will be raised.
+
+        :return: The `DiseaseState` that precedes the current one.
+        """
         new = self.value - 1
         if new < 1:
             raise ValueError('Enumeration ended')

@@ -16,7 +16,6 @@ from virus_test import VirusTest, TestOutcome
 Things we still want to program:
 - Change the values for the parameters to more realistic, literature-based values. 
 - Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
-- For the agent's schedule, the schedule should not be a function of the number of rooms.
 - Possible addition: add other types of rooms next to lecture rooms, e.g. break room or lab rooms. These would have a different mapping compared to lecture rooms.
 - Possible addition: next to contact tracing, more possible mitigation measures: such as social distancing or having a % of agents wearing face masks.
 """
@@ -42,8 +41,8 @@ class VirusAgent(Agent):
         self.agent_id = unique_id
         self.day_time = 0
         self.rooster_agent = RoosterAgent(self, self.model)
-        self.room = None
-        self.seat = None
+        self.room: Optional[LectureRoom] = None
+        self.seat: Optional[Seat] = None
         self.virus_test = VirusTest(self.model.test_delay, self.model.random)
 
         """
@@ -88,7 +87,7 @@ class VirusAgent(Agent):
 
         return Virus(self.model.random, state)
 
-    def enforce_quarantine(self, days: int):
+    def enforce_quarantine(self, days: int) -> None:
         """
         Places this agent under quarantine.
 
@@ -97,7 +96,7 @@ class VirusAgent(Agent):
         self.quarantine = True
         self.quarantine_duration = days
 
-    def move(self):
+    def move(self) -> None:
         possible_steps = self.model.grid.get_neighborhood(
             self.pos,
             moore=True,
@@ -112,7 +111,7 @@ class VirusAgent(Agent):
 
         self.model.grid.move_agent(self, new_position)
 
-    def handle_contact(self, other_agent: 'VirusAgent'):
+    def handle_contact(self, other_agent: 'VirusAgent') -> None:
         """
         Attempts to spread the virus to another agent. This only has an effect if the other agent isn't already infected.
 
@@ -133,16 +132,27 @@ class VirusAgent(Agent):
 
         other_agent.virus.infect(self.model.spread_chance, self.model.day)
 
-    def set_room(self):
+    def set_room(self) -> None:
+        """
+        updates the `Room` this agent is in. If they have a break in their schedule,
+        the room will be set to None, otherwise to the room specified in the schedule.
+        """
         room_id = self.rooster_agent.rooster[0]  # What does this do?
         if room_id == self.model.rooster_model.break_room_id:
             self.room = None
         else:
             self.room = self.model.grid.rooms_list[room_id]
 
-    def set_seat(self, random_seat: bool = True):
+    def set_seat(self, random_seat: bool = True) -> None:
+        """
+        Updates the seat of this agent. If this agent is currently not in a room, their seat will be made available again.
+
+        :param random_seat: Whether to attempt to randomly assign a seat.
+        """
         if self.room is None:
-            self.seat = None
+            if self.seat is not None:
+                self.seat.available = True
+                self.seat = None
             return
 
         found_seat = None
@@ -177,7 +187,7 @@ class VirusAgent(Agent):
         self.model.grid.move_agent(self, new_position)
         self.seat = found_seat
 
-    def new_day(self, day: int):
+    def new_day(self, day: int) -> None:
         """
         Handles the start of a new day.
 
@@ -196,7 +206,7 @@ class VirusAgent(Agent):
 
         self.day_time = 0
 
-    def testing(self):
+    def testing(self) -> None:
         """"
         testing agents (if virus testable)
         """
@@ -208,7 +218,7 @@ class VirusAgent(Agent):
         self.day_tested = self.model.day
         self.virus_test.perform_test(self.model.day, self.virus)
 
-    def quarantine_agents(self, last_contact_days: int = 3):  # , detection_days = 1
+    def quarantine_agents(self, last_contact_days: int = 3) -> None:  # , detection_days = 1
         """"
         quarantine agents after being tested positive or having contact to positive tested person
 
@@ -225,7 +235,7 @@ class VirusAgent(Agent):
             if not self.quarantine:
                 self.enforce_quarantine(14)
 
-    def trace_contact(self, distance_tracking: int = 1):
+    def trace_contact(self, distance_tracking: int = 1) -> None:
         """"
         tracing contact to each agent in certain radius with time of last contact
 
@@ -244,7 +254,7 @@ class VirusAgent(Agent):
                         ignore_index=True)
                     other_agent.df_contacts = other_agent.df_contacts.groupby("unique_id").max().reset_index()
 
-    def move_to_random_position(self):
+    def move_to_random_position(self) -> None:
         """
         Moves this agent to a random position on the grid. Note that only 'valid' positions are considered
         (see RoomGrid#is_available(int, int, False).
@@ -259,7 +269,7 @@ class VirusAgent(Agent):
         else:
             self.model.grid.move_agent(self, (pos_x, pos_y))
 
-    def do_rooster_step(self, room_rooster_id: int):
+    def do_rooster_step(self, room_rooster_id: int) -> None:
         """
         Takes care of whatever the agent has to do this step according to their schedule/rooster.
         :param room_rooster_id: The ID of the room they should be in. If they are not already there,
@@ -286,7 +296,10 @@ class VirusAgent(Agent):
 
         self.in_lecture = next_in_lecture
 
-    def step(self):
+    def step(self) -> None:
+        """
+        Executes a single step in the model for this agent.
+        """
         # No zombies allowed
         if self.virus.disease_state == DiseaseState.DECEASED or self.quarantine:
             self.day_time += 1
@@ -411,16 +424,22 @@ class VirusModel(Model):
                              "tested total": get_tested_count, "tested positive": get_tested_positive_count,
                              "tested negative": get_tested_negative_count})
 
-    def set_day_step(self):
+    def set_day_step(self) -> None:
+        """
+        Updates the 'day_step' variable, so it gets the number of steps
+        that have passed for the current day (so the time of day).
+        """
         self.day_step = (self.total_steps % DAY_DURATION)
 
-    def clear_rooms(self):
+    def clear_rooms(self) -> None:
+        """
+        Resets all the seats in all the rooms back to 'available'.
+        """
         for room in self.grid.rooms_list:
-            room.is_reserved = False
             for seat in room.seats:
                 seat.available = True
 
-    def next_day(self):
+    def next_day(self) -> None:
         """
         Handles the start of a new day.
         """
@@ -432,7 +451,10 @@ class VirusModel(Model):
         self.virtual_steps = self.day * NIGHT_DURATION
         print("NEXT DAY: {}".format(self.day))
 
-    def step(self):
+    def step(self) -> None:
+        """
+        Executes a step for the model.
+        """
         self.clear_rooms()
         self.set_day_step()
         self.datacollector.collect(self)
@@ -627,5 +649,12 @@ model_params = {
 }
 
 
-def create_grid(width: int = DEFAULT_GRID_WIDTH, height: int = DEFAULT_GRID_HEIGHT):
+def create_canvas_room_grid(width: int = DEFAULT_GRID_WIDTH, height: int = DEFAULT_GRID_HEIGHT) -> CanvasRoomGrid:
+    """
+    Creates a new `CanvasRoomGrid`.
+
+    :param width: The initial width of the grid.
+    :param height:  The initial height of the grid.
+    :return: The newly created `CanvasRoomGrid`
+    """
     return CanvasRoomGrid(agent_portrayal, width, height, 900, 900)

@@ -21,7 +21,7 @@ The width of the hallway.
 """
 
 
-def get_square():
+def get_square() -> typing.Dict[str, typing.Union[str, int, float]]:
     portrayal = {"Shape": "rect",
                  "w": 1,
                  "h": 1,
@@ -31,27 +31,15 @@ def get_square():
     return portrayal
 
 
-def seat_portrayal():
+def seat_portrayal() -> typing.Dict[str, typing.Union[str, int, float]]:
     portrayal = get_square()
     portrayal["Color"] = "rgba(99, 44, 4, 0.4)"
     return portrayal
 
 
-def wall_portrayal():
+def wall_portrayal() -> typing.Dict[str, typing.Union[str, int, float]]:
     portrayal = get_square()
     portrayal["Color"] = "rgba(0, 0, 0, 0.65)"
-    return portrayal
-
-
-def error_portrayal():
-    portrayal = get_square()
-    portrayal["Color"] = "purple"
-    return portrayal
-
-
-def error_portrayal2():
-    portrayal = get_square()
-    portrayal["Color"] = "orange"
     return portrayal
 
 
@@ -143,7 +131,7 @@ class Room(ABC):
         """
         return x == self.x_entry and y == self.y_entry
 
-    def get_portrayal(self, x: int, y: int):
+    def get_portrayal(self, x: int, y: int) -> Optional[typing.Dict[str, typing.Union[str, int, float]]]:
         """
         Gets the portrayal of the square at the given position. The portrayal determines how it's rendered.
 
@@ -199,8 +187,6 @@ class LectureRoom(Room):
         """
         super().__init__(room_id, x_min, y_min, x_max, y_max, entry_side)
 
-        self.is_reserved = False
-
         if entry_side == Side.NORTH:
             self.y_min_lecturer_area = y_max - (entry_side_offset + 1)
             self.y_max_lecturer_area = y_max - 1
@@ -232,7 +218,7 @@ class LectureRoom(Room):
         self.y_min_seat = self.y_min + 2 + y_min_seat_offset
         self.y_max_seat = self.y_max - 2 - y_max_seat_offset
 
-        self.seats = []
+        self.seats: List[Seat] = []
         self.__populate_seats()
 
     # Override
@@ -312,7 +298,7 @@ class LectureRoom(Room):
                 return seat
         return None
 
-    def get_portrayal(self, x: int, y: int):
+    def get_portrayal(self, x: int, y: int) -> Optional[typing.Dict[str, typing.Union[str, int, float]]]:
         """
         Gets the portrayal of the square at the given position. The portrayal determines how it's rendered.
 
@@ -350,7 +336,7 @@ class RoomGrid(MultiGrid):
         self.room_row_size = math.ceil(math.sqrt(room_count))
         self.break_room_size = break_room_size
         self.rooms = np.empty((self.room_row_size + 1, self.room_row_size), dtype=Room)
-        self.rooms_list = []
+        self.rooms_list: List[LectureRoom] = []
         self.rows = np.empty(self.room_row_size + 1, dtype=object)
         self.vertical_room_count = 0
         self.__generate_rooms()
@@ -510,7 +496,7 @@ class RoomGrid(MultiGrid):
 
         return room.is_available(x, y)
 
-    def get_portrayal(self, x: int, y: int):
+    def get_portrayal(self, x: int, y: int) -> Optional[typing.Dict[str, typing.Union[str, int, float]]]:
         """
         Gets the portrayal of the square at the given x/y coordinate pair.
 

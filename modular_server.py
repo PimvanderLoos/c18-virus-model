@@ -1,14 +1,16 @@
 import os
-import sys
 
 import tornado
 from mesa.visualization import ModularVisualization
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
 
-
 relative_path = os.path.relpath(os.path.dirname(__file__) + "/web",
                                 os.path.dirname(ModularVisualization.__file__ + "/templates"))
+"""
+The relative path between mesa's directory for scripts and templates and ours.
+This allows us to inject our own files.
+"""
 
 
 class CustomPageHandler(tornado.web.RequestHandler):
@@ -26,11 +28,11 @@ class CustomPageHandler(tornado.web.RequestHandler):
             package_includes=self.application.package_includes,
             local_includes=self.application.local_includes,
             scripts=self.application.js_code,
-            )
+        )
 
 
 class GridPublisher(tornado.web.RequestHandler):
-    """ Handler for the HTML template which holds the visualization. """
+    """ Handler for the page that displays the current width/height of the grid """
 
     def initialize(self, server: 'CustomModularServer'):
         self.server = server
@@ -44,6 +46,7 @@ class CustomModularServer(ModularServer):
     custom_page_handler = (r"/", CustomPageHandler)
 
     def __init__(self, model_cls, visualization_elements, name="Mesa Model", model_params={}):
+        """ Create a new visualization server with the given elements. """
         self.model = None
 
         # Load our own static files.
@@ -53,7 +56,7 @@ class CustomModularServer(ModularServer):
             {"path": os.path.dirname(__file__) + "/web"},
         )
 
-        grid_publisher_handler = (r"/grid_data", GridPublisher,  {'server': self})
+        grid_publisher_handler = (r"/grid_data", GridPublisher, {'server': self})
 
         self.handlers = [grid_publisher_handler, self.custom_page_handler, self.socket_handler,
                          self.static_handler, self.local_handler, static_file_handler]
@@ -61,7 +64,10 @@ class CustomModularServer(ModularServer):
         model_params['server'] = self
         super().__init__(model_cls, visualization_elements, name, model_params)
 
-    def rebuild(self):
+    def rebuild(self) -> None:
+        """
+        Rebuilds the javascript code.
+        """
         self.js_code = []
         for element in self.visualization_elements:
             for include_file in element.package_includes:
