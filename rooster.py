@@ -1,17 +1,20 @@
-from typing import Optional
-
 from room_grid import *
+
+from typing import TYPE_CHECKING
+
+# Make sure we can reference VirusAgent and VirusModel for typing hints
+# Without running into cyclical dependencies.
+if TYPE_CHECKING:
+    from virus_model import VirusAgent, VirusModel
 
 DAY_PARTS = 4
 DAY_PART_DURATION = 8  # steps to make 2 hours
 DAY_DURATION = 8 * 4
-AMOUNT_OF_ROOMS = 21
 LECTURES_PER_DAY = 3
-AMOUNT_OF_AGENTS = 800
 
 
 class RoosterAgent:
-    def __init__(self, agent, model):
+    def __init__(self, agent: 'VirusAgent', model: 'VirusModel'):
         """
         Steps at the beginning of the day is needed to find out at which time the agent is in the day.
         """
@@ -20,11 +23,11 @@ class RoosterAgent:
         self.model = model
         self.rooster = self.model.rooster_model.rooster[:, self.agent_id]
 
-    def new_day(self, day_duration: int, model):
+    def new_day(self, day_duration: int, model: 'VirusModel'):
         # pass
         for i in range(int(day_duration / DAY_PART_DURATION)):
             for j in range(DAY_PART_DURATION):
-                room = self.get_available_room(model)
+                room = self.get_available_room()
                 seat = self.get_seat(room)
                 """
                 step is the time of the day.
@@ -33,13 +36,13 @@ class RoosterAgent:
                 self.rooster.append((room, seat, step))
                 self.steps_at_beginning_day = model.total_steps
 
-    def get_available_room(self, model) -> Optional[LectureRoom]:
+    def get_available_room(self) -> Optional[LectureRoom]:
         for room in self.model.grid.rooms_list:
             if room.room_available():
                 return room
         return None
 
-    def get_seat(self, room) -> Optional[Seat]:
+    def get_seat(self, room: 'LectureRoom') -> Optional[Seat]:
         for seat in room.seats:
             if seat.available:
                 return seat
@@ -47,7 +50,7 @@ class RoosterAgent:
 
 
 class RoosterModel:
-    def __init__(self, model):
+    def __init__(self, model: 'VirusModel'):
         self.model = model
 
         self.break_room_id = self.model.grid.room_count
