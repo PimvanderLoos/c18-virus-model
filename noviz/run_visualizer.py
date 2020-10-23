@@ -2,7 +2,6 @@ import argparse
 import pandas
 import os
 
-# TODO: Accept seed parameter for the Random attribute of the model for reproducible results.
 import util
 from noviz.constants import MODEL_DATA_PATH
 from noviz.visualize import Visualizer

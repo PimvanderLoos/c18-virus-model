@@ -1,3 +1,5 @@
+from typing import Any
+
 from mesa.visualization.modules import CanvasGrid
 from collections import defaultdict
 
@@ -35,7 +37,14 @@ class CanvasRoomGrid(CanvasGrid):
         """
         return self.canvas_width, self.canvas_height
 
-    def update_dimensions(self, server: CustomModularServer, x: int, y: int):
+    def update_dimensions(self, server: CustomModularServer, x: int, y: int) -> None:
+        """
+        Updates the x/y dimensions of the grid.
+
+        :param server: The server that owns this grid. This server will have to be rebuilt to reflect the changes.
+        :param x: The new width.
+        :param y: The new height.
+        """
         self.canvas_width = x * 10
         self.canvas_height = y * 10
         self.grid_width = x
@@ -49,6 +58,12 @@ class CanvasRoomGrid(CanvasGrid):
         server.rebuild()
 
     def render(self, model):
+        """
+        Renders the room grid.
+
+        :param model: The model containing a room grid.
+        :return: The dictionary containing the rendered portrayals.
+        """
         grid_state = defaultdict(list)
         for x in range(model.grid.width):
             for y in range(model.grid.height):

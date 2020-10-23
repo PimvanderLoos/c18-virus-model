@@ -1,5 +1,4 @@
 import argparse
-import os
 
 from noviz.constants import MODEL_DATA_PATH
 from noviz.visualize import Visualizer
@@ -19,14 +18,12 @@ parser.add_argument('--testDelay', type=int, help="The number of days it takes f
                     default=DEFAULT_TEST_DELAY)
 parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                     default=DEFAULT_DAILY_TEST_CHANCE)
-
 parser.add_argument('--room_size', type=int, help="The size of the rooms (this value is squared).",
                     default=DEFAULT_ROOM_SIZE)
 parser.add_argument('--room_count', type=int, help="The number of class rooms",
                     default=DEFAULT_ROOM_COUNT)
 parser.add_argument('--break_room_size', type=int, help="The size of the break room.",
                     default=DEFAULT_BREAK_ROOM_SIZE)
-
 parser.add_argument('--stepCount', type=int, help="The number of steps to simulate", default=2000)
 parser.add_argument('--show-plots', dest='show', help="Show the plots.", action='store_true')
 parser.add_argument('--write-plots', dest='write', help="Write the plots to files", action='store_true')
@@ -37,7 +34,7 @@ parser.add_argument('--random-seed', type=int, dest='seed', help="The seed to us
 args = parser.parse_args()
 
 # Completely arbitrary value
-minimum_step_count = 10
+minimum_step_count = 22
 if args.stepCount < minimum_step_count:
     raise ValueError("Please select at least {} steps.".format(minimum_step_count))
 

@@ -53,7 +53,7 @@ class Virus:
         Describes the day on which the next update to the disease stage will be applied.
         """
 
-    def is_infectious(self):
+    def is_infectious(self) -> bool:
         """
         Checks if the current state of the disease can spread the disease to other agents.
 
@@ -61,7 +61,7 @@ class Virus:
         """
         return self.disease_state >= DiseaseState.INFECTIOUS
 
-    def is_infected(self):
+    def is_infected(self) -> bool:
         """
         Checks if the owner of this Virus is currently infected or not.
 
@@ -71,7 +71,7 @@ class Virus:
         """
         return self.disease_state >= DiseaseState.INFECTED
 
-    def is_deceased(self):
+    def is_deceased(self) -> bool:
         """
         Checks if the owner of this Virus is deceased.
 
@@ -79,7 +79,7 @@ class Virus:
         """
         return self.disease_state == DiseaseState.DECEASED
 
-    def is_testable(self):
+    def is_testable(self) -> bool:
         """
         Checks if the agent can show up on tests.
 
@@ -87,7 +87,7 @@ class Virus:
         """
         return self.disease_state >= DiseaseState.TESTABLE
 
-    def handle_disease_progression(self, day):
+    def handle_disease_progression(self, day: int) -> None:
         """
         Handles the disease progression for this agent. If they are not at least infected, nothing happens.
 
@@ -101,7 +101,7 @@ class Virus:
         if day >= self.__next_disease_update:
             self.__go_to_next_state(day)
 
-    def __go_to_next_state(self, day):
+    def __go_to_next_state(self, day: int) -> None:
         """
         Advances the disease to the next stage.
         """
@@ -117,7 +117,7 @@ class Virus:
         else:
             self.__set_stage(self.disease_state.next(), day)
 
-    def __set_stage(self, new_state, day):
+    def __set_stage(self, new_state: 'DiseaseState', day: int) -> None:
         """
         Updates the current stage to the defined stage.
 
@@ -127,7 +127,14 @@ class Virus:
         self.disease_state = new_state
         self.__next_disease_update = day + self.__get_next_update()
 
-    def __get_next_update(self):
+    def __get_next_update(self) -> int:
+        """
+        Gets the number of days between the current state and the next state.
+
+        If the amount is considered infinite, 9999 will be returned.
+
+        :return: The number of days between the current state and the next state.
+        """
         if self.disease_state < DiseaseState.INFECTED:
             return 9999
 
@@ -144,7 +151,7 @@ class Virus:
         else:
             return 9999
 
-    def infect(self, infection_chance, day):
+    def infect(self, infection_chance: int, day: int) -> None:
         """
         Attempts to infect the agent.
 
@@ -206,19 +213,33 @@ class DiseaseState(Enum):
     This represents the state of the agent where they are showing symptoms of the virus.
     """
 
-    def next(self):
+    def next(self) -> 'DiseaseState':
+        """
+        Gets the `DiseaseState` that follows the current one, if one such state exists.
+
+        If the current state is the last one, a ValueError will be raised.
+
+        :return: The `DiseaseState` that follows the current one.
+        """
         new = self.value + 1
         if new > 7:
             raise ValueError('Enumeration ended')
         return DiseaseState(new)
 
-    def previous(self):
+    def previous(self) -> 'DiseaseState':
+        """
+        Gets the `DiseaseState` that precedes the current one, if one such state exists.
+
+        If the current state is the first one, a ValueError will be raised.
+
+        :return: The `DiseaseState` that precedes the current one.
+        """
         new = self.value - 1
         if new < 1:
             raise ValueError('Enumeration ended')
         return DiseaseState(new)
 
-    def __lt__(self, other):
+    def __lt__(self, other: 'DiseaseState') -> bool:
         if self.__class__ is other.__class__:
             return self.value < other.value
         return NotImplemented

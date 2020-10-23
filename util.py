@@ -44,6 +44,14 @@ def get_line_between_points(x_0: int, y_0: int, x_1: int, y_1: int) -> Set[Tuple
 
 
 def get_directory(file: str) -> str:
+    """
+    Parses a directory from a string. Note that it checks the path relative to the current directory.
+
+    If the file does not exist or if it is not a directory, an error will be thrown.
+
+    :param file: The path of a directory relative to the current directory.
+    :return: The directory without a trailing '/' (or the platform-specific equivalent).
+    """
     directory = file.rstrip(os.sep)
     if not os.path.exists(directory):
         raise FileNotFoundError("Path does not exist: \"{}\"!".format(directory))
