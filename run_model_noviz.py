@@ -18,6 +18,14 @@ parser.add_argument('--testDelay', type=int, help="The number of days it takes f
                     default=DEFAULT_TEST_DELAY)
 parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                     default=DEFAULT_DAILY_TEST_CHANCE)
+#
+parser.add_argument('--participationTracing', type=int, help="Proportion of people particpating in contact tracing",
+                    default=DEFAULT_PARTICIPATION_TRACING)
+parser.add_argument('--lastContactDays', type=int, help="Number of days for tracing last contacts ",
+                    default=DEFAULT_LAST_CONTACT_DAYS)
+parser.add_argument('--distanceTracking', type=int, help="Radius of Tracing contacts in meters",
+                    default=DEFAULT_DISTANCE_TRACKING)
+#
 parser.add_argument('--room_size', type=int, help="The size of the rooms (this value is squared).",
                     default=DEFAULT_ROOM_SIZE)
 parser.add_argument('--room_count', type=int, help="The number of class rooms",
@@ -75,7 +83,8 @@ file.write("Running with settings: \n"
 file.close()
 
 model = VirusModel(args.num_agents, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, args.baseInfection,
-                   args.spreadDistance, args.spreadChance, args.testChance, args.mitigation, args.testDelay, args.seed,
+                   args.spreadDistance, args.spreadChance, args.testChance, args.mitigation, args.testDelay,
+                   args.participationTracing, args.lastContactDays, args.distanceTracking, args.seed,
                    None, None, args.room_count, args.room_size, args.break_room_size)
 
 for step in range(0, args.stepCount):

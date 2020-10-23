@@ -36,6 +36,8 @@ chart_quarantined = ChartModule([{"Label": "quarantined: infected",
                                 data_collector_name='datacollector')
 chart_testing = ChartModule([{"Label": "tested total",
                               "Color": "Black"},
+                             {"Label": "tested pending",
+                             "Color":"Yellow"},
                              {"Label": "tested negative",
                               "Color": "Blue"},
                              {"Label": "tested positive",

@@ -195,9 +195,12 @@ class VirusAgent(Agent):
         """
         self.virus.handle_disease_progression(day)
         self.virus_test.new_day(day)
-
+        
+        if self.virus_test.get_result(self.model.day) == TestOutcome.NEGATIVE:
+            self.quarantine_duration = 0
+            
         self.testing()
-        self.quarantine_agents()
+        self.quarantine_agents(self.model.last_contact_days)
 
         if self.quarantine:
             self.quarantine_duration -= 1
@@ -206,19 +209,26 @@ class VirusAgent(Agent):
 
         self.day_time = 0
 
-    def testing(self) -> None:
+    def testing(self, reason = "routine") -> None:
         """"
         testing agents (if virus testable)
+        
+        :param reason: Checking if routine testing or contact tracing suggestion
         """
         if (self.quarantine or
-                self.virus.is_deceased() or
-                self.model.random.randrange(0, 100) > self.model.daily_testing_chance):
+                self.virus.is_deceased()):
             return
+        
+        if reason == "routine":
+            if (not self.virus.is_infected() or 
+                self.model.random.randrange(0, 100) > self.model.daily_testing_chance):
+                return
+            
 
         self.day_tested = self.model.day
         self.virus_test.perform_test(self.model.day, self.virus)
 
-    def quarantine_agents(self, last_contact_days: int = 3) -> None:  # , detection_days = 1
+    def quarantine_agents(self, last_contact_days) -> None:  # , detection_days = 1
         """"
         quarantine agents after being tested positive or having contact to positive tested person
 
@@ -230,12 +240,15 @@ class VirusAgent(Agent):
                 (self.day_tested - self.df_contacts["time_contact"]) <= last_contact_days, "unique_id"].unique()
             for other_agent in self.model.schedule.agent_buffer(shuffled=False):
                 if (other_agent.unique_id in list(ids_contact)) & (not other_agent.quarantine):
-                    other_agent.enforce_quarantine(14)
+                    if self.model.random.randrange(0, 100) < self.model.participation_tracing:
+                        other_agent.testing(reason = "risk_contact")
+                        other_agent.enforce_quarantine(10)                        
+                    
 
             if not self.quarantine:
-                self.enforce_quarantine(14)
+                self.enforce_quarantine(10)
 
-    def trace_contact(self, distance_tracking: int = 1) -> None:
+    def trace_contact(self, distance_tracking) -> None:
         """"
         tracing contact to each agent in certain radius with time of last contact
 
@@ -320,7 +333,7 @@ class VirusAgent(Agent):
             self.handle_contact(other_agent)
 
         if self.model.choice_of_measure == 'Contact Tracing':
-            self.trace_contact()
+            self.trace_contact(self.model.distance_tracking)
         self.day_time += 1
 
 
@@ -329,9 +342,9 @@ class VirusModel(Model):
 
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
-                 test_delay: int, seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None,
-                 server: Optional[CustomModularServer] = None, room_count: int = 10, room_size: int = 15,
-                 break_room_size: int = 20, *args, **kwargs):
+                 test_delay: int, participation_tracing: int, last_contact_days: int, distance_tracking: int, 
+                 seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None, server: Optional[CustomModularServer] = None, 
+                 room_count: int = 10, room_size: int = 15,break_room_size: int = 20, *args, **kwargs):
         """
         Initializes a new Virus Model.
 
@@ -369,6 +382,8 @@ class VirusModel(Model):
         """
         Describes the chance of the virus spreading to another agent. Applied every step.
         """
+        self.participation_tracing = participation_tracing
+        self.last_contact_days = last_contact_days
 
         self.schedule = RandomActivation(self)
         self.grid = RoomGrid(grid_width, grid_height, False, room_count=room_count,
@@ -401,6 +416,7 @@ class VirusModel(Model):
 
         self.daily_testing_chance = daily_testing_chance
         self.choice_of_measure = choice_of_measure
+        self.distance_tracking = distance_tracking
 
         # Create agents
         for uid in range(self.num_agents):
@@ -421,7 +437,8 @@ class VirusModel(Model):
                              "quarantined: infected": get_quarantined_infected,
                              "quarantined: healthy": get_quarantined_healthy,
                              "not quarantined: infected": get_notquarantined_infected,
-                             "tested total": get_tested_count, "tested positive": get_tested_positive_count,
+                             "tested total": get_tested_count, "tested pending": get_tested_pending_count,
+                             "tested positive": get_tested_positive_count,
                              "tested negative": get_tested_negative_count})
 
     def set_day_step(self) -> None:
@@ -548,6 +565,8 @@ def get_symptomatic_count(model: VirusModel) -> int:
 def get_tested_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus_test.get_test_stats().get_total_count() for agent in model.schedule.agents]))
 
+def get_tested_pending_count(model: VirusModel) -> int:
+    return int(np.sum([agent.virus_test.get_test_stats().get_pending_count() for agent in model.schedule.agents]))
 
 def get_tested_positive_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus_test.get_test_stats().get_positive_count() for agent in model.schedule.agents]))
@@ -602,8 +621,11 @@ DEFAULT_BREAK_ROOM_SIZE = 32
 DEFAULT_SPREAD_DISTANCE = 2
 DEFAULT_SPREAD_CHANCE = 8
 DEFAULT_DAILY_TEST_CHANCE = 10
-DEFAULT_TEST_DELAY = 5
+DEFAULT_TEST_DELAY = 2
 DEFAULT_RANDOM_SEED = None
+DEFAULT_PARTICIPATION_TRACING = 70
+DEFAULT_LAST_CONTACT_DAYS = 3
+DEFAULT_DISTANCE_TRACKING = 1
 
 # Includes adjustable sliders for the user in the visualization
 model_params = {
@@ -637,6 +659,12 @@ model_params = {
     "spread_chance": UserSettableParameter("slider", "Spread probability", DEFAULT_SPREAD_CHANCE, 1, 100, 1),
     "daily_testing_chance": UserSettableParameter("slider", "Daily probability of getting tested per agent",
                                                   DEFAULT_DAILY_TEST_CHANCE, 1, 100, 1),
+    "participation_tracing": UserSettableParameter("slider", "Proportion of tracing participation",
+                                                 DEFAULT_PARTICIPATION_TRACING, 1, 100, 1),
+    "last_contact_days": UserSettableParameter("slider", "Number of Days for tracing last contact",
+                                                  DEFAULT_LAST_CONTACT_DAYS, 1, 14, 1), 
+    "distance_tracking": UserSettableParameter("slider", "Radius of tracing contacts (in meters)",
+                                                  DEFAULT_DISTANCE_TRACKING, 1, 5, 1),
     "legend": UserSettableParameter('static_text',
                                     value="<b>Legend</b> <br> "
                                           "<span style=color:green;>Green</span> dot: healthy agent. <br> "

@@ -188,7 +188,6 @@ class VirusTest:
 
     def get_result(self, day: int) -> TestOutcome:
         """
-        Gets the result of the latest test if one is available on this day. (It might not be because of delays).
 
         :param day: The number of the new day.
         :return: The `TestOutcome` associated with the current status of the tests.
