@@ -639,13 +639,13 @@ model_params = {
                                                   DEFAULT_DAILY_TEST_CHANCE, 1, 100, 1),
     "legend": UserSettableParameter('static_text',
                                     value="<b>Legend</b> <br> "
-                                          "Green dot: healthy agent. <br> "
-                                          "Blue dot: infected agent. <br> "
-                                          "Red dot: infectious agent. <br> "
-                                          "Bright purple dot: testable agent. <br> "
-                                          "Grey square: wall. <br> "
-                                          "Red square: classroom seat. <br> "
-                                          "White square: space where the agent can move. ")
+                                          "<span style=color:green;>Green</span> dot: healthy agent. <br> "
+                                          "<span style=color:blue;>Blue</span> dot: infected agent. <br> "
+                                          "<span style=color:red;>Red</span> dot: infectious agent. <br> "
+                                          "<span style=color:rgba(255,0,212,1);>Bright purple</span> dot: testable agent. <br> "
+                                          "<span style=color:rgba(0,0,0,0.65);>Grey</span> square: wall. <br> "
+                                          "<span style=color:rgba(99,44,4,0.4);>Brown</span> square: classroom seat. <br> "
+                                          "<span style=color:white>White</span> square: space where the agent can move. ")
 }
 
 
