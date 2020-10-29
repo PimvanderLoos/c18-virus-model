@@ -105,57 +105,62 @@ class StatisticManager:
         data.to_csv(file, index_label="id")
 
 
-parser = argparse.ArgumentParser(description='Generates a CSV containing various statistics from multiple runs.')
-parser.add_argument('input', type=str, help="The int directory containing multiple subdirectories with results",
-                    default=".")
-args = parser.parse_args()
+def main(raw_args=None):
+    parser = argparse.ArgumentParser(description='Generates a CSV containing various statistics from multiple runs.')
+    parser.add_argument('input', type=str, help="The int directory containing multiple subdirectories with results",
+                        default=".")
+    args = parser.parse_args(raw_args)
 
-directory = get_directory(args.input)
+    directory = get_directory(args.input)
 
-statistics_manager = StatisticManager()
-statistics_manager.register_statistic(Statistic("Death count", lambda data: data[['deaths']].iloc[-1]))
-statistics_manager.register_statistic(Statistic("Total infected", 
-                                                lambda data: pd.DataFrame(data['deaths'] + data['infected'] +
-                                                data['recovered']).iloc[-1]))
-statistics_manager.register_statistic(Statistic("Total tests", lambda data: data[['tested total']].iloc[-1]))
-statistics_manager.register_statistic(Statistic("Positive Tests", lambda data: data[['tested positive']].iloc[-1]))
-statistics_manager.register_statistic(Statistic("Negative Tests", lambda data: data[['tested negative']].iloc[-1]))
-statistics_manager.register_statistic(Statistic("Peak Infected", lambda data: data[['infected']].max()))
-statistics_manager.register_statistic(Statistic("Peak Quarantined", lambda data: data[['quarantined']].max()))
+    statistics_manager = StatisticManager()
+    statistics_manager.register_statistic(Statistic("Death count", lambda data: data[['deaths']].iloc[-1]))
+    statistics_manager.register_statistic(Statistic("Total infected",
+                                                    lambda data: pd.DataFrame(data['deaths'] + data['infected'] +
+                                                    data['recovered']).iloc[-1]))
+    statistics_manager.register_statistic(Statistic("Total tests", lambda data: data[['tested total']].iloc[-1]))
+    statistics_manager.register_statistic(Statistic("Positive Tests", lambda data: data[['tested positive']].iloc[-1]))
+    statistics_manager.register_statistic(Statistic("Negative Tests", lambda data: data[['tested negative']].iloc[-1]))
+    statistics_manager.register_statistic(Statistic("Peak Infected", lambda data: data[['infected']].max()))
+    statistics_manager.register_statistic(Statistic("Peak Quarantined", lambda data: data[['quarantined']].max()))
 
-statistics_manager.register_statistic(Statistic("Peak Infected Quarantined", lambda data: data[['quarantined: infected']].max()))
-statistics_manager.register_statistic(Statistic("Peak Healthy Quarantined", lambda data: data[['quarantined: healthy']].max()))
-statistics_manager.register_statistic(Statistic("Peak Infected Not Quarantined", lambda data: data[['not quarantined: infected']].max()))
-statistics_manager.register_statistic(Statistic("Peak Difference Healthy to Infected Quarantined",
-                                                lambda data: pd.DataFrame(data['quarantined: healthy']-data['quarantined: infected']).max()))
+    statistics_manager.register_statistic(Statistic("Peak Infected Quarantined", lambda data: data[['quarantined: infected']].max()))
+    statistics_manager.register_statistic(Statistic("Peak Healthy Quarantined", lambda data: data[['quarantined: healthy']].max()))
+    statistics_manager.register_statistic(Statistic("Peak Infected Not Quarantined", lambda data: data[['not quarantined: infected']].max()))
+    statistics_manager.register_statistic(Statistic("Peak Difference Healthy to Infected Quarantined",
+                                                    lambda data: pd.DataFrame(data['quarantined: healthy']-data['quarantined: infected']).max()))
 
 
 
-count = 0
-for entry in os.scandir(directory):
-    if not entry.is_dir():
-        continue
+    count = 0
+    for entry in os.scandir(directory):
+        if not entry.is_dir():
+            continue
 
-    model_data = entry.path + os.sep + MODEL_DATA_PATH
-    if not os.path.exists(model_data):
-        continue
+        model_data = entry.path + os.sep + MODEL_DATA_PATH
+        if not os.path.exists(model_data):
+            continue
 
-    count += 1
-    statistics_manager.parse_input(pd.read_pickle(model_data), entry.name)
+        count += 1
+        statistics_manager.parse_input(pd.read_pickle(model_data), entry.name)
 
-# If no results were found at all, remind the user how to use this script and abort.
-if count == 0:
-    print('''
-No results were found! Did you select the right folder? 
-In the following example directory layout, you should've selected 'the_top_dir':
+    # If no results were found at all, remind the user how to use this script and abort.
+    if count == 0:
+        print('''
+    No results were found! Did you select the right folder?
+    In the following example directory layout, you should've selected 'the_top_dir':
 
-  the_top_dir
-  |- experiment_1
-  |  |- model.pickle
-  |- experiment_2
-  |  |- model.pickle
-''')
-    exit(0)
+      the_top_dir
+      |- experiment_1
+      |  |- model.pickle
+      |- experiment_2
+      |  |- model.pickle
+    ''')
+        exit(0)
 
-csv_file = directory + os.sep + "output.csv"
-statistics_manager.write_csv(csv_file)
+    csv_file = directory + os.sep + "output.csv"
+    statistics_manager.write_csv(csv_file)
+
+
+if __name__ == '__main__':
+    main()
