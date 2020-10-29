@@ -1,0 +1,17 @@
+Running with settings: 
+Output dir: Tracing80_3
+Num agents: 800
+Mitigation: ContactTracing
+Base infection: 3
+Spread chance: 10
+Spread distance: 2
+Daily test chance: 5
+Number of steps: 2000
+Test delay: 2
+Participation Contact Tracing: 80
+Days of Tracing Contacts: 14
+Distance of Contact Tracing: 2
+Seed: None
+Room Size: 15
+Room Count: 10
+Break Room Size: 32

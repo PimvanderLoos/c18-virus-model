@@ -5,6 +5,72 @@
 # 1) The name of the output directory for the given experiment.
 # 2) The reported name in the generated CSV file if/when that is generated.
 
-simulation_output_no_mitigation --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
+# simulation_output_no_mitigation --stepCount 300 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
 # simulation_output_contact_tracing --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
 # simulation_output_contact_tracing_test_delay_2 --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 2 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
+
+Tracing0_0  --participationTracing 0
+Tracing0_1  --participationTracing 0
+Tracing0_2  --participationTracing 0
+Tracing0_3  --participationTracing 0
+Tracing0_4  --participationTracing 0
+Tracing0_5  --participationTracing 0
+Tracing0_6  --participationTracing 0
+Tracing0_7  --participationTracing 0
+Tracing0_8  --participationTracing 0
+Tracing0_9  --participationTracing 0
+
+Tracing20_0 --mitigation ContactTracing --participationTracing 20
+Tracing20_1 --mitigation ContactTracing --participationTracing 20
+Tracing20_2 --mitigation ContactTracing --participationTracing 20
+Tracing20_3 --mitigation ContactTracing --participationTracing 20
+Tracing20_4 --mitigation ContactTracing --participationTracing 20
+Tracing20_5 --mitigation ContactTracing --participationTracing 20
+Tracing20_6 --mitigation ContactTracing --participationTracing 20
+Tracing20_7 --mitigation ContactTracing --participationTracing 20
+Tracing20_8 --mitigation ContactTracing --participationTracing 20
+Tracing20_9 --mitigation ContactTracing --participationTracing 20
+
+Tracing40_0 --mitigation ContactTracing --participationTracing 40
+Tracing40_1 --mitigation ContactTracing --participationTracing 40
+Tracing40_2 --mitigation ContactTracing --participationTracing 40
+Tracing40_3 --mitigation ContactTracing --participationTracing 40
+Tracing40_4 --mitigation ContactTracing --participationTracing 40
+Tracing40_5 --mitigation ContactTracing --participationTracing 40
+Tracing40_6 --mitigation ContactTracing --participationTracing 40
+Tracing40_7 --mitigation ContactTracing --participationTracing 40
+Tracing40_8 --mitigation ContactTracing --participationTracing 40
+Tracing40_9 --mitigation ContactTracing --participationTracing 40
+
+Tracing60_0 --mitigation ContactTracing --participationTracing 60
+Tracing60_1 --mitigation ContactTracing --participationTracing 60
+Tracing60_2 --mitigation ContactTracing --participationTracing 60
+Tracing60_3 --mitigation ContactTracing --participationTracing 60
+Tracing60_4 --mitigation ContactTracing --participationTracing 60
+Tracing60_5 --mitigation ContactTracing --participationTracing 60
+Tracing60_6 --mitigation ContactTracing --participationTracing 60
+Tracing60_7 --mitigation ContactTracing --participationTracing 60
+Tracing60_8 --mitigation ContactTracing --participationTracing 60
+Tracing60_9 --mitigation ContactTracing --participationTracing 60
+
+Tracing80_0 --mitigation ContactTracing --participationTracing 80
+Tracing80_1 --mitigation ContactTracing --participationTracing 80
+Tracing80_2 --mitigation ContactTracing --participationTracing 80
+Tracing80_3 --mitigation ContactTracing --participationTracing 80
+Tracing80_4 --mitigation ContactTracing --participationTracing 80
+Tracing80_5 --mitigation ContactTracing --participationTracing 80
+Tracing80_6 --mitigation ContactTracing --participationTracing 80
+Tracing80_7 --mitigation ContactTracing --participationTracing 80
+Tracing80_8 --mitigation ContactTracing --participationTracing 80
+Tracing80_9 --mitigation ContactTracing --participationTracing 80
+
+Tracing100_0 --mitigation ContactTracing --participationTracing 100
+Tracing100_1 --mitigation ContactTracing --participationTracing 100
+Tracing100_2 --mitigation ContactTracing --participationTracing 100
+Tracing100_3 --mitigation ContactTracing --participationTracing 100
+Tracing100_4 --mitigation ContactTracing --participationTracing 100
+Tracing100_5 --mitigation ContactTracing --participationTracing 100
+Tracing100_6 --mitigation ContactTracing --participationTracing 100
+Tracing100_7 --mitigation ContactTracing --participationTracing 100
+Tracing100_8 --mitigation ContactTracing --participationTracing 100
+Tracing100_9 --mitigation ContactTracing --participationTracing 100

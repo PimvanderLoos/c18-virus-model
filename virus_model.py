@@ -332,7 +332,7 @@ class VirusAgent(Agent):
         for other_agent in self.model.grid.get_neighbors(pos=self.pos, radius=self.model.spread_distance, moore=True):
             self.handle_contact(other_agent)
 
-        if self.model.choice_of_measure == 'Contact Tracing':
+        if self.model.choice_of_measure == 'ContactTracing':
             self.trace_contact(self.model.distance_tracking)
         self.day_time += 1
 
@@ -639,7 +639,7 @@ model_params = {
                                                "After setting the options to the desired values, "
                                                "click 'Reset' and restart the simulation."),
     "choice_of_measure": UserSettableParameter('choice', 'Mitigation measure applied', value=DEFAULT_MITIGATION,
-                                               choices=['No measures', 'Contact Tracing']),
+                                               choices=['No measures', 'ContactTracing']),
     # "contacttracing_option": UserSettableParameter('checkbox', 'Measure: Contact Tracing', value=True),
     "num_agents": UserSettableParameter("slider", "Number of agents", DEFAULT_NUM_AGENTS, 10, 1000, 10),
     "grid_width": DEFAULT_GRID_WIDTH,
