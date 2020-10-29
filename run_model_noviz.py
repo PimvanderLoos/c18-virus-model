@@ -62,10 +62,13 @@ file.write("Running with settings: \n"
            "Daily test chance: {}\n"
            "Number of steps: {}\n"
            "Test delay: {}\n"
+           "Participation Contact Tracing: {}\n"
+           "Days of Tracing Contacts: {}\n"
+           "Distance of Contact Tracing: {}\n"
            "Seed: {}\n"
            "Room Size: {}\n"
            "Room Count: {}\n"
-           "Beak Room Size: {}\n"
+           "Break Room Size: {}\n"
            .format(directory,
                    args.num_agents,
                    args.mitigation,
@@ -75,6 +78,9 @@ file.write("Running with settings: \n"
                    args.testChance,
                    args.stepCount,
                    args.testDelay,
+                   args.participationTracing,
+                   args.lastContactDays,
+                   args.distanceTracking,
                    args.seed,
                    args.room_size,
                    args.room_count,

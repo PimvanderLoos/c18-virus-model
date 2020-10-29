@@ -114,11 +114,22 @@ directory = get_directory(args.input)
 
 statistics_manager = StatisticManager()
 statistics_manager.register_statistic(Statistic("Death count", lambda data: data[['deaths']].iloc[-1]))
+statistics_manager.register_statistic(Statistic("Total infected", 
+                                                lambda data: pd.DataFrame(data['deaths'] + data['infected'] +
+                                                data['recovered']).iloc[-1]))
 statistics_manager.register_statistic(Statistic("Total tests", lambda data: data[['tested total']].iloc[-1]))
 statistics_manager.register_statistic(Statistic("Positive Tests", lambda data: data[['tested positive']].iloc[-1]))
 statistics_manager.register_statistic(Statistic("Negative Tests", lambda data: data[['tested negative']].iloc[-1]))
 statistics_manager.register_statistic(Statistic("Peak Infected", lambda data: data[['infected']].max()))
 statistics_manager.register_statistic(Statistic("Peak Quarantined", lambda data: data[['quarantined']].max()))
+
+statistics_manager.register_statistic(Statistic("Peak Infected Quarantined", lambda data: data[['quarantined: infected']].max()))
+statistics_manager.register_statistic(Statistic("Peak Healthy Quarantined", lambda data: data[['quarantined: healthy']].max()))
+statistics_manager.register_statistic(Statistic("Peak Infected Not Quarantined", lambda data: data[['not quarantined: infected']].max()))
+statistics_manager.register_statistic(Statistic("Peak Difference Healthy to Infected Quarantined",
+                                                lambda data: pd.DataFrame(data['quarantined: healthy']-data['quarantined: infected']).max()))
+
+
 
 count = 0
 for entry in os.scandir(directory):

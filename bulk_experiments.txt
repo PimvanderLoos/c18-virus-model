@@ -6,5 +6,5 @@
 # 2) The reported name in the generated CSV file if/when that is generated.
 
 simulation_output_no_mitigation --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
-simulation_output_contact_tracing --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
-simulation_output_contact_tracing_test_delay_2 --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 2 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
+# simulation_output_contact_tracing --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
+# simulation_output_contact_tracing_test_delay_2 --stepCount 2000 --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 2 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
