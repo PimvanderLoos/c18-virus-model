@@ -12,13 +12,6 @@ from rooster import *
 from virus import *
 from virus_test import VirusTest, TestOutcome
 
-""" TODO list
-Things we still want to program:
-- Change the values for the parameters to more realistic, literature-based values. 
-- Agents that are quarantined but receive a negative test, can come back and do not have to be taken out of the simulation for the usual 14 days.
-- Possible addition: add other types of rooms next to lecture rooms, e.g. break room or lab rooms. These would have a different mapping compared to lecture rooms.
-- Possible addition: next to contact tracing, more possible mitigation measures: such as social distancing or having a % of agents wearing face masks.
-"""
 
 DAY_DURATION = 8 * 4
 """
@@ -195,10 +188,10 @@ class VirusAgent(Agent):
         """
         self.virus.handle_disease_progression(day)
         self.virus_test.new_day(day)
-        
+
         if self.virus_test.get_result(self.model.day) == TestOutcome.NEGATIVE:
             self.quarantine_duration = 0
-            
+
         self.testing()
         self.quarantine_agents(self.model.last_contact_days)
 
@@ -212,18 +205,18 @@ class VirusAgent(Agent):
     def testing(self, reason = "routine") -> None:
         """"
         testing agents (if virus testable)
-        
+
         :param reason: Checking if routine testing or contact tracing suggestion
         """
         if (self.quarantine or
                 self.virus.is_deceased()):
             return
-        
+
         if reason == "routine":
-            if (not self.virus.is_infected() or 
+            if (not self.virus.is_infected() or
                 self.model.random.randrange(0, 100) > self.model.daily_testing_chance):
                 return
-            
+
 
         self.day_tested = self.model.day
         self.virus_test.perform_test(self.model.day, self.virus)
@@ -242,8 +235,8 @@ class VirusAgent(Agent):
                 if (other_agent.unique_id in list(ids_contact)) & (not other_agent.quarantine):
                     if self.model.random.randrange(0, 100) < self.model.participation_tracing:
                         other_agent.testing(reason = "risk_contact")
-                        other_agent.enforce_quarantine(10)                        
-                    
+                        other_agent.enforce_quarantine(10)
+
 
             if not self.quarantine:
                 self.enforce_quarantine(10)
@@ -342,8 +335,8 @@ class VirusModel(Model):
 
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
-                 test_delay: int, participation_tracing: int, last_contact_days: int, distance_tracking: int, 
-                 seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None, server: Optional[CustomModularServer] = None, 
+                 test_delay: int, participation_tracing: int, last_contact_days: int, distance_tracking: int,
+                 seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None, server: Optional[CustomModularServer] = None,
                  room_count: int = 10, room_size: int = 15,break_room_size: int = 20, *args, **kwargs):
         """
         Initializes a new Virus Model.
@@ -662,7 +655,7 @@ model_params = {
     "participation_tracing": UserSettableParameter("slider", "Proportion of tracing participation",
                                                  DEFAULT_PARTICIPATION_TRACING, 1, 100, 1),
     "last_contact_days": UserSettableParameter("slider", "Number of Days for tracing last contact",
-                                                  DEFAULT_LAST_CONTACT_DAYS, 1, 14, 1), 
+                                                  DEFAULT_LAST_CONTACT_DAYS, 1, 14, 1),
     "distance_tracking": UserSettableParameter("slider", "Radius of tracing contacts (in meters)",
                                                   DEFAULT_DISTANCE_TRACKING, 1, 5, 1),
     "legend": UserSettableParameter('static_text',
