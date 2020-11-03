@@ -53,7 +53,7 @@ simulation_output_contact_tracing --stepCount 2000 --mitigation contact_tracing 
 
 2) Run the experiments:
 ```shell
-$ python noviz/run_bulk_experiments.py bulk_experiments.txt
+$ python run_bulk_experiments.py bulk_experiments.txt
 ```
 
 The combined results of all the experiments can be found in `output.csv`, which will give you the following statistics about each experiment:
@@ -65,7 +65,8 @@ The combined results of all the experiments can be found in `output.csv`, which 
 - The peak number of infected agents that were <i>not</i> quarantined.
 - The peak difference in number of healhty quarantined agents compared to infected quarantined agents.
 
-For every individual experiment a folder with its name (first entry of the experiment definition) will be created. If `--write-plots` was specified, 4 plots will be generated to visualize the results. These are some example plots for a simulation without contact tracing:
+For every individual experiment a folder with its name (first entry of the experiment definition) will be created. <br/>
+If `--write-plots` was specified, 4 plots will be generated to visualize the results. These are some example plots for a simulation without contact tracing:
 
 
 <img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_basic.png?token=AAXYNY5LM567MTBYQUJAVC27VJ7JW" width="45%"></img> 
