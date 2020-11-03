@@ -4,13 +4,12 @@ import sys
 
 import os
 
-from noviz import run_csv_generator
-
 # Add the files from the super module, so we can import get_directory from util.
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
+from noviz import run_csv_generator
 import run_model_noviz
 
 
