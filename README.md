@@ -4,13 +4,13 @@ DMAS Project 20/21
 Code for the implementation of our project called 'Contact Tracing in Virus Models' for the course 'Design of Multi-agents Systems'. The code uses Mesa, the Apache2 licensed agent-based modeling framework in Python.
 
 ### Summary
-The model simulates the spread of SARS-CoV-2 in the setting of a university using either not mitigation strategies or contact tracing. <br>
+The model simulates the spread of Covid-19 in the setting of a university building using either no mitigation strategies or contact tracing, a mitigation measure that uses a mobile application to not only track and quarantine infected persons but also contacts of infected persons. <br>
 Every agent in the model follows their own schedule which defines when they have to sit in which room. 
 
 Every day in the model simulates 8 hours, split into 4 2-hour lecture slots. Because this model only looks at the spread of the virus in the setting of a university, the remaining 16 hours and the weekends are not modeled, though they do count towards time-based variables such as disease progression.
 
 Once an agent is infected, they go through several stages: Infected -> Testable -> Infectious -> Symptomatic. </br>
-Once an agent becomes testable (including later stages), their tests can return a positive result. Once an agent becomes infectious (including later stages) they can infect other agents. After the symptomatic stage agents will either die or recover. Once recovered, they can not get infected again. 
+Once an agent becomes testable (including later stages), their tests can return a positive result. Once an agent becomes infectious (including later stages) they can infect other agents. After the symptomatic stage agents will either die or recover. Once recovered, they cannot get infected again. 
 
 ## Running the model
 1) Install Mesa and its dependencies:
