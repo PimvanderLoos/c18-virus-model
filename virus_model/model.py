@@ -657,9 +657,19 @@ model_params = {
                                                DEFAULT_LAST_CONTACT_DAYS, 1, 14, 1),
     "distance_tracking": UserSettableParameter("slider", "Radius of tracing contacts (in meters)",
                                                DEFAULT_DISTANCE_TRACKING, 1, 5, 1),
+
     "legend": UserSettableParameter('static_text',
                                     value="<b>Legend</b> <br> "
-                                          "<span style=color:green;>Green</span> dot: healthy agent. <br> "
+                                          "<style>"
+                                          "span {"
+                                          "    font-size: 16px;"
+                                          "    font-weight: bold;"
+                                          "}"
+                                          ".well {"
+                                          "    background-image: linear-gradient(to bottom,#dbdbdb 0,#dbdbdb 100%)"
+                                          "}"
+                                          "</style>"
+                                          "<span style=color:rgba(43,200,0,1);>Green</span> dot: healthy agent. <br> "
                                           "<span style=color:blue;>Blue</span> dot: infected agent. <br> "
                                           "<span style=color:red;>Red</span> dot: infectious agent. <br> "
                                           "<span style=color:rgba(255,0,212,1);>Bright purple</span> dot: testable agent. <br> "
