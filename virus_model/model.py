@@ -327,7 +327,11 @@ class VirusAgent(Agent):
 
 
 class VirusModel(Model):
-    """A model with some number of agents."""
+    """
+    This is a model that simulates the spread of SARS-CoV-2 in the setting of a university.
+
+    It was developed by Sharif Hamed, Jonas Schweisthal, Leanne de Vree, and Pim van der Loos for the 2020/2021 RUG course Design of Multi-Agent Systems.
+    """
 
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
