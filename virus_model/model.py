@@ -328,9 +328,10 @@ class VirusAgent(Agent):
 
 class VirusModel(Model):
     """
-    This is a model that simulates the spread of SARS-CoV-2 in the setting of a university.
+    This is a model that simulates the spread of Covid-19 in the setting of a university building.
 
     It was developed by Sharif Hamed, Jonas Schweisthal, Leanne de Vree, and Pim van der Loos for the 2020/2021 RUG course Design of Multi-Agent Systems.
+    
     """
 
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
@@ -677,6 +678,8 @@ model_params = {
                                           "<span style=color:blue;>Blue</span> dot: infected agent. <br> "
                                           "<span style=color:red;>Red</span> dot: infectious agent. <br> "
                                           "<span style=color:rgba(255,0,212,1);>Bright purple</span> dot: testable agent. <br> "
+                                          "<span style=color:rgba(102,0,0,1);>Dark red</span> dot: symptomatic agent. <br> "
+                                          "<span style=color:rgba(8,323,222,1);>Bright turquoise</span> dot: recovered agent. <br> "
                                           "<span style=color:rgba(0,0,0,0.65);>Grey</span> square: wall. <br> "
                                           "<span style=color:rgba(99,44,4,0.4);>Brown</span> square: classroom seat. <br> "
                                           "<span style=color:white>White</span> square: space where the agent can move. ")

@@ -48,5 +48,5 @@ server = CustomModularServer(VirusModel,
                              [time_element, grid_canvas, chart, chart_disease_state, chart_quarantined, chart_testing],
                              "Virus Model", model_params)
 
-server.port = 8543
+server.port = 8545
 server.launch()
