@@ -65,9 +65,11 @@ The combined results of all the experiments can be found in `output.csv`, which 
 - The peak number of infected agents that were <i>not</i> quarantined.
 - The peak difference in number of healhty quarantined agents compared to infected quarantined agents.
 
-For every individual experiment a folder with its name (first entry of the experiment definition) will be created. If `--write-plots` was specified, 4 plots will be generated to visualize the results:
-<img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_basic.png" width="45%"></img> 
-<img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_disease_state.png" width="45%"></img> 
-<img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_quarantine.png" width="45%"></img> 
-<img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_testing.png" width="45%"></img>
+For every individual experiment a folder with its name (first entry of the experiment definition) will be created. If `--write-plots` was specified, 4 plots will be generated to visualize the results. These are some example plots for a simulation without contact tracing:
+
+
+<img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_basic.png?token=AAXYNY5LM567MTBYQUJAVC27VJ7JW" width="45%"></img> 
+<img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_disease_state.png?token=AAXYNY2AECP6ZPTIH5KAY6K7VJ7J2" width="45%"></img> 
+<img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_quarantine.png?token=AAXYNY2FYK5VJIHOHVPG57C7VJ7J6" width="45%"></img> 
+<img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_testing.png?token=AAXYNY37IOVPXMD4ZI3YHS27VJ7KA" width="45%"></img>
 
