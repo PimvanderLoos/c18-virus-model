@@ -1,12 +1,15 @@
 from random import seed, Random
 from unittest import TestCase
 
-from virus_model.virus import Virus
+from virus_model.virus import Virus, DiseaseState
 from virus_model.virus_test import TestResult, TestOutcome, RESULT_ACTIVE_DAY, VirusTest
 
 
 # Perhaps this could have a better name? Can't be worse, I guess.
 class TestTestResult(TestCase):
+    """
+    Base class for testing the TestResult class.
+    """
     def setUp(self):
         self.result_day = 20
         self.test_result = TestResult(TestOutcome.POSITIVE, self.result_day)
@@ -14,21 +17,34 @@ class TestTestResult(TestCase):
 
 class TestGetResults(TestTestResult):
     def test_too_early(self):
+        """
+        Make sure that requesting the result of a test before it is available returns UNTESTED.
+        """
         assert self.test_result.get_result(self.result_day - RESULT_ACTIVE_DAY - 1) == TestOutcome.UNTESTED
 
     def test_lower_bound(self):
+        """
+        Make sure that the test is available on the correct day (no stupid off-by-one errors).
+        """
         assert self.test_result.get_result(self.result_day) == TestOutcome.POSITIVE
 
     def test_upper_bound(self):
+        """
+        Make sure that the test is still available on the last day it is supposed to be (no stupid off-by-one errors).
+        """
         assert self.test_result.get_result(self.result_day + RESULT_ACTIVE_DAY) == TestOutcome.POSITIVE
 
     def test_too_old(self):
+        """
+        Make sure that tests that are no longer valid return UNTESTED again.
+        """
         assert self.test_result.get_result(self.result_day + RESULT_ACTIVE_DAY + 1) == TestOutcome.UNTESTED
 
 
-def skip_to_day(virus_test: VirusTest, current, goal):
+def skip_to_day(virus_test: VirusTest, current: int, goal: int):
     """
     Skips to a given day for the virus test.
+
     :param virus_test: The VirusTest object to progress to the given day.
     :param current: The current day.
     :param goal: The goal day (inclusive).
@@ -38,6 +54,9 @@ def skip_to_day(virus_test: VirusTest, current, goal):
 
 
 class TestVirusTest(TestCase):
+    """
+    The base class for testing the VirusTest class.
+    """
     def setUp(self):
         self.result_delay = 7
         self.random = Random()
@@ -48,37 +67,35 @@ class TestVirusTest(TestCase):
         self.virus_test = VirusTest(result_delay=self.result_delay, random=self.random,
                                     false_negative_rate=self.false_negative_rate,
                                     false_positive_rate=self.false_positive_rate)
-        self.virus_positive = Virus(self.random, 100)
-        self.virus_negative = Virus(self.random, 0)
+        self.virus_positive = Virus(self.random, DiseaseState.TESTABLE)
+        self.virus_negative = Virus(self.random, DiseaseState.HEALTHY)
 
 
 class TestDayProgression(TestVirusTest):
+    """
+    Make sure that day progression (for delayed tests) works as intended.
+    """
     def test_perform_test(self):
-        # Reset?
-        skip_to_day(self.virus_test, 0, 0)
-
         self.virus_test.perform_test(0, self.virus_negative)
         self.virus_test.perform_test(7, self.virus_positive)
         self.virus_test.perform_test(9, self.virus_positive)
 
     def test_instant_testing(self):
-        # Reset?
-        skip_to_day(self.virus_test, 0, 0)
-
-        old_delay = self.virus_test.result_delay
+        """
+        Make sure that testing with a delay of 0 days means that the results are available immediately.
+        """
         self.virus_test.result_delay = 0
 
         self.virus_test.perform_test(0, self.virus_negative)
         assert self.virus_test.get_result(0) == TestOutcome.NEGATIVE
 
-        # Reset old delay. I don't know if this is needed (perhaps this could be tested in a separate class)
-        # But I don't really know how that works in Python, so better safe than sorry.
-        self.virus_test.result_delay = old_delay
-
     def test_new_day(self):
-        # Reset?
-        skip_to_day(self.virus_test, 0, 0)
+        """
+        Make sure day progression works as intended.
 
+        This means that test results should get evicted once a new one becomes available (even if the old result is
+        still valid).
+        """
         assert self.virus_test.get_result(0) == TestOutcome.UNTESTED
 
         invalidation_delay = self.virus_test.result_delay + RESULT_ACTIVE_DAY
@@ -115,9 +132,12 @@ class TestDayProgression(TestVirusTest):
         assert self.virus_test.get_result(empty_day + 1 + self.result_delay) == TestOutcome.POSITIVE
 
     def test_statistics(self):
-        # Reset?
-        skip_to_day(self.virus_test, 0, 0)
+        """
+        Make sure that the recorded statistics (number of (pending/positive/negative/total) tests) are correct.
 
+        Specifically important to make sure that pending tests get moved to the correct categories once they become
+        available (and thus are no longer pending).
+        """
         self.virus_test.perform_test(0, self.virus_negative)
         self.virus_test.perform_test(7, self.virus_positive)
         self.virus_test.perform_test(9, self.virus_positive)
