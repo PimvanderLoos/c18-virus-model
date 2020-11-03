@@ -1,5 +1,6 @@
-import pandas as pd
 import random
+
+import pandas as pd
 from mesa import Agent, Model
 from mesa.datacollection import DataCollector
 from mesa.time import RandomActivation
@@ -11,7 +12,6 @@ from virus_model.modular_server import CustomModularServer
 from virus_model.rooster import *
 from virus_model.virus import *
 from virus_model.virus_test import VirusTest, TestOutcome
-
 
 DAY_DURATION = 8 * 4
 """
@@ -96,8 +96,6 @@ class VirusAgent(Agent):
             include_center=False,
             radius=1, in_break_room=True)
         if len(possible_steps) == 0:
-            # print("Failed to find position for agent {}: Current position: [{} {}]".format(
-            #     self.unique_id, self.pos[0], self.pos[1]))
             return
 
         new_position = self.random.choice(possible_steps)
@@ -202,7 +200,7 @@ class VirusAgent(Agent):
 
         self.day_time = 0
 
-    def testing(self, reason = "routine") -> None:
+    def testing(self, reason="routine") -> None:
         """"
         testing agents (if virus testable)
 
@@ -214,9 +212,8 @@ class VirusAgent(Agent):
 
         if reason == "routine":
             if (not self.virus.is_infected() or
-                self.model.random.randrange(0, 100) > self.model.daily_testing_chance):
+                    self.model.random.randrange(0, 100) > self.model.daily_testing_chance):
                 return
-
 
         self.day_tested = self.model.day
         self.virus_test.perform_test(self.model.day, self.virus)
@@ -234,9 +231,8 @@ class VirusAgent(Agent):
             for other_agent in self.model.schedule.agent_buffer(shuffled=False):
                 if (other_agent.unique_id in list(ids_contact)) & (not other_agent.quarantine):
                     if self.model.random.randrange(0, 100) < self.model.participation_tracing:
-                        other_agent.testing(reason = "risk_contact")
+                        other_agent.testing(reason="risk_contact")
                         other_agent.enforce_quarantine(10)
-
 
             if not self.quarantine:
                 self.enforce_quarantine(10)
@@ -336,8 +332,9 @@ class VirusModel(Model):
     def __init__(self, num_agents: int, grid_width: int, grid_height: int, base_infection_rate: float,
                  spread_distance: int, spread_chance: int, daily_testing_chance: int, choice_of_measure: str,
                  test_delay: int, participation_tracing: int, last_contact_days: int, distance_tracking: int,
-                 seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None, server: Optional[CustomModularServer] = None,
-                 room_count: int = 10, room_size: int = 15,break_room_size: int = 20, *args, **kwargs):
+                 seed: int = None, grid_canvas: Optional[CanvasRoomGrid] = None,
+                 server: Optional[CustomModularServer] = None,
+                 room_count: int = 10, room_size: int = 15, break_room_size: int = 20, *args, **kwargs):
         """
         Initializes a new Virus Model.
 
@@ -558,8 +555,10 @@ def get_symptomatic_count(model: VirusModel) -> int:
 def get_tested_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus_test.get_test_stats().get_total_count() for agent in model.schedule.agents]))
 
+
 def get_tested_pending_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus_test.get_test_stats().get_pending_count() for agent in model.schedule.agents]))
+
 
 def get_tested_positive_count(model: VirusModel) -> int:
     return int(np.sum([agent.virus_test.get_test_stats().get_positive_count() for agent in model.schedule.agents]))
@@ -653,11 +652,11 @@ model_params = {
     "daily_testing_chance": UserSettableParameter("slider", "Daily probability of getting tested per agent",
                                                   DEFAULT_DAILY_TEST_CHANCE, 1, 100, 1),
     "participation_tracing": UserSettableParameter("slider", "Proportion of tracing participation",
-                                                 DEFAULT_PARTICIPATION_TRACING, 1, 100, 1),
+                                                   DEFAULT_PARTICIPATION_TRACING, 1, 100, 1),
     "last_contact_days": UserSettableParameter("slider", "Number of Days for tracing last contact",
-                                                  DEFAULT_LAST_CONTACT_DAYS, 1, 14, 1),
+                                               DEFAULT_LAST_CONTACT_DAYS, 1, 14, 1),
     "distance_tracking": UserSettableParameter("slider", "Radius of tracing contacts (in meters)",
-                                                  DEFAULT_DISTANCE_TRACKING, 1, 5, 1),
+                                               DEFAULT_DISTANCE_TRACKING, 1, 5, 1),
     "legend": UserSettableParameter('static_text',
                                     value="<b>Legend</b> <br> "
                                           "<span style=color:green;>Green</span> dot: healthy agent. <br> "

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 # Make sure we can reference VirusAgent and VirusModel for typing hints
 # Without running into cyclical dependencies.
 if TYPE_CHECKING:
-    from virus_model import VirusAgent, VirusModel
+    from virus_model.model import VirusAgent, VirusModel
 
 
 LECTURES_PER_DAY = 4

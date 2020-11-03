@@ -132,5 +132,3 @@ class TestDayProgression(TestVirusTest):
         assert self.virus_test.get_test_stats().get_total_count() == 3
         assert self.virus_test.get_test_stats().get_positive_count() == 2
         assert self.virus_test.get_test_stats().get_negative_count() == 1
-
-

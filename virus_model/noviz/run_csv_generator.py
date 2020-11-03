@@ -28,6 +28,7 @@ class Statistic:
     """
     Represents a statistic that can parse the generated data into a single entry for the final CSV file.
     """
+
     def __init__(self, name: str, function):
         """
         :param name: The name of this statistic. The name is used as the column name in the final CSV file.
@@ -69,6 +70,7 @@ class StatisticManager:
     """
     Represents a set of statistics to be generated from an experiment.
     """
+
     def __init__(self):
         self.__statistics: List[Statistic] = []
         self.__data = [[]]
@@ -119,20 +121,22 @@ def main(raw_args=None):
     statistics_manager.register_statistic(Statistic("Death count", lambda data: data[['deaths']].iloc[-1]))
     statistics_manager.register_statistic(Statistic("Total infected",
                                                     lambda data: pd.DataFrame(data['deaths'] + data['infected'] +
-                                                    data['recovered']).iloc[-1]))
+                                                                              data['recovered']).iloc[-1]))
     statistics_manager.register_statistic(Statistic("Total tests", lambda data: data[['tested total']].iloc[-1]))
     statistics_manager.register_statistic(Statistic("Positive Tests", lambda data: data[['tested positive']].iloc[-1]))
     statistics_manager.register_statistic(Statistic("Negative Tests", lambda data: data[['tested negative']].iloc[-1]))
     statistics_manager.register_statistic(Statistic("Peak Infected", lambda data: data[['infected']].max()))
     statistics_manager.register_statistic(Statistic("Peak Quarantined", lambda data: data[['quarantined']].max()))
 
-    statistics_manager.register_statistic(Statistic("Peak Infected Quarantined", lambda data: data[['quarantined: infected']].max()))
-    statistics_manager.register_statistic(Statistic("Peak Healthy Quarantined", lambda data: data[['quarantined: healthy']].max()))
-    statistics_manager.register_statistic(Statistic("Peak Infected Not Quarantined", lambda data: data[['not quarantined: infected']].max()))
+    statistics_manager.register_statistic(
+        Statistic("Peak Infected Quarantined", lambda data: data[['quarantined: infected']].max()))
+    statistics_manager.register_statistic(
+        Statistic("Peak Healthy Quarantined", lambda data: data[['quarantined: healthy']].max()))
+    statistics_manager.register_statistic(
+        Statistic("Peak Infected Not Quarantined", lambda data: data[['not quarantined: infected']].max()))
     statistics_manager.register_statistic(Statistic("Peak Difference Healthy to Infected Quarantined",
-                                                    lambda data: pd.DataFrame(data['quarantined: healthy']-data['quarantined: infected']).max()))
-
-
+                                                    lambda data: pd.DataFrame(data['quarantined: healthy'] - data[
+                                                        'quarantined: infected']).max()))
 
     count = 0
     for entry in os.scandir(directory):
