@@ -15,7 +15,7 @@ Once an agent becomes testable (including later stages), their tests can return 
 ## Running the model
 1) Install Mesa and its dependencies:
 ```shell
-$ pip install -r https://github.com/PimvanderLoos/c18-virus-model/blob/master/requirements.txt
+$ pip install -r https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/requirements.txt?token=AAXYNY2NM73QHJ7GULYUP5K7VKETW
 ```
 
 2) Clone the online repository:
