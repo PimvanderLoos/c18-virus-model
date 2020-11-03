@@ -47,8 +47,8 @@ To run multiple experiments, we provide a way to run the model without its visua
 This file contains one experiment definition per line using the commandline arguments of the `run_model_noviz` module.<br/>
 Here is an example of 2 experiment definitions, one without any mitigation strategies and one that uses contact tracing:
 ```shell script
-simulation_output_no_mitigation --stepCount 2000 --mitigation "No measures" --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
-simulation_output_contact_tracing --stepCount 2000 --mitigation "Contact Tracing" --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
+simulation_output_no_mitigation --stepCount 2000 --mitigation no_measures --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
+simulation_output_contact_tracing --stepCount 2000 --mitigation contact_tracing --num_agents 800 --baseInfection 3 --spreadChance 8 --spreadDistance 2 --testDelay 5 --random-seed 42 --write-plots --room_size 15 --room_count 10 --break_room_size 22
 ```
 
 2) Run the experiments:
