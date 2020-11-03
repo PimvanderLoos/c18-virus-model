@@ -2,7 +2,6 @@ import os
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator, MultipleLocator
 
 
 class Visualizer:

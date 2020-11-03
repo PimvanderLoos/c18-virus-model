@@ -1,8 +1,8 @@
 from random import seed, Random
 from unittest import TestCase
 
-from virus import Virus
-from virus_test import TestResult, TestOutcome, RESULT_ACTIVE_DAY, VirusTest
+from virus_model.virus import Virus
+from virus_model.virus_test import TestResult, TestOutcome, RESULT_ACTIVE_DAY, VirusTest
 
 
 # Perhaps this could have a better name? Can't be worse, I guess.

@@ -1,8 +1,7 @@
-from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.modules import ChartModule
 
-from modular_server import CustomModularServer
-from virus_model import VirusModel, time_element, model_params, create_canvas_room_grid
+from virus_model.modular_server import CustomModularServer
+from virus_model.model import VirusModel, time_element, model_params, create_canvas_room_grid
 
 grid_canvas = create_canvas_room_grid()
 chart = ChartModule([{"Label": "infected",

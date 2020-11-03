@@ -1,16 +1,19 @@
 import argparse
-import pandas
 import inspect
 import os
 import sys
-from typing import List
+from pathlib import Path
 
+import pandas
+
+# Add the files from the super modules, so we can import get_directory from util.
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
-import util
-from noviz.constants import MODEL_DATA_PATH
-from noviz.visualize import Visualizer
+parent_dir = Path(current_dir)
+sys.path.insert(0, str(parent_dir.parent.parent))
+
+from virus_model import util
+from virus_model.noviz.constants import MODEL_DATA_PATH
+from virus_model.noviz.visualize import Visualizer
 
 parser = argparse.ArgumentParser(description='Run the model using the provided parameters')
 parser.add_argument('input', type=str, help="The input directory for the results")
@@ -28,4 +31,3 @@ if not args.write and not args.show:
     raise RuntimeError("Not showing or saving the plots... Please specify at least one action!")
 
 Visualizer(model_data, directory, save_file=args.write, show_file=args.show).visualize_all()
-

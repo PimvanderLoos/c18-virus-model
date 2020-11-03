@@ -1,8 +1,8 @@
 import argparse
 
-from noviz.constants import MODEL_DATA_PATH
-from noviz.visualize import Visualizer
-from virus_model import *
+from virus_model.model import *
+from virus_model.noviz.constants import MODEL_DATA_PATH
+from virus_model.noviz.visualize import Visualizer
 
 
 def main(raw_args=None):
@@ -11,12 +11,15 @@ def main(raw_args=None):
     parser.add_argument('--num_agents', type=int, help="The number of agents to use", default=DEFAULT_NUM_AGENTS)
     parser.add_argument('--mitigation', type=str, help="The mitigation method to use", default=DEFAULT_MITIGATION)
     parser.add_argument('--baseInfection', type=float, help="The base infection rate (i.e. the percentage of agents "
-                                                            "starting out infected)", default=DEFAULT_BASE_INFECTION_RATE)
+                                                            "starting out infected)",
+                        default=DEFAULT_BASE_INFECTION_RATE)
     parser.add_argument('--spreadChance', type=int, help="The chance of the virus spreading to agents within range per "
                                                          "tick (15 min)", default=DEFAULT_SPREAD_CHANCE)
-    parser.add_argument('--spreadDistance', type=int, help="The maximum distance between two agents for them to be able "
-                                                           "to infect each other", default=DEFAULT_SPREAD_DISTANCE)
-    parser.add_argument('--testDelay', type=int, help="The number of days it takes for a test result to become available ",
+    parser.add_argument('--spreadDistance', type=int,
+                        help="The maximum distance between two agents for them to be able "
+                             "to infect each other", default=DEFAULT_SPREAD_DISTANCE)
+    parser.add_argument('--testDelay', type=int,
+                        help="The number of days it takes for a test result to become available ",
                         default=DEFAULT_TEST_DELAY)
     parser.add_argument('--testChance', type=int, help="The daily chance of getting tested",
                         default=DEFAULT_DAILY_TEST_CHANCE)
@@ -39,7 +42,8 @@ def main(raw_args=None):
     parser.add_argument('--write-plots', dest='write', help="Write the plots to files", action='store_true')
     parser.add_argument('--random-seed', type=int, dest='seed', help="The seed to use for the random module. This is a "
                                                                      "numerical value. Not providing a seed means random "
-                                                                     "values will be used.", default=DEFAULT_RANDOM_SEED)
+                                                                     "values will be used.",
+                        default=DEFAULT_RANDOM_SEED)
 
     args = parser.parse_args(raw_args)
 

@@ -6,11 +6,11 @@ from mesa.time import RandomActivation
 from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.modules import TextElement
 
-from canvas_room_grid import CanvasRoomGrid
-from modular_server import CustomModularServer
-from rooster import *
-from virus import *
-from virus_test import VirusTest, TestOutcome
+from virus_model.canvas_room_grid import CanvasRoomGrid
+from virus_model.modular_server import CustomModularServer
+from virus_model.rooster import *
+from virus_model.virus import *
+from virus_model.virus_test import VirusTest, TestOutcome
 
 
 DAY_DURATION = 8 * 4

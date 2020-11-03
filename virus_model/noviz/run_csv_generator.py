@@ -9,17 +9,19 @@ import argparse
 import inspect
 import os
 import sys
+from pathlib import Path
 from typing import List
 
 import pandas as pd
 
-# Add the files from the super module, so we can import get_directory from util.
+# Add the files from the super modules, so we can import get_directory from util.
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
+parent_dir = Path(current_dir)
+sys.path.insert(0, str(parent_dir.parent.parent))
 
-from util import get_directory
-from noviz.constants import MODEL_DATA_PATH
+# from virus_model.util import get_directory
+from virus_model.util import get_directory
+from virus_model.noviz.constants import MODEL_DATA_PATH
 
 
 class Statistic:

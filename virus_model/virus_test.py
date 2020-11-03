@@ -3,7 +3,7 @@ from random import Random
 
 from typing import List
 
-from virus import Virus
+from virus_model.virus import Virus
 
 RESULT_ACTIVE_DAY = 7
 """

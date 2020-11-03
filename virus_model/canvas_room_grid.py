@@ -1,9 +1,7 @@
-from typing import Any
-
 from mesa.visualization.modules import CanvasGrid
 from collections import defaultdict
 
-from modular_server import CustomModularServer
+from virus_model.modular_server import CustomModularServer
 
 
 class CanvasRoomGrid(CanvasGrid):

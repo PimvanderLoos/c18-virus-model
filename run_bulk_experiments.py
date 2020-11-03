@@ -1,19 +1,11 @@
 import argparse
-import inspect
-import sys
-
 import os
 
-# Add the files from the super module, so we can import get_directory from util.
-current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
-
-from noviz import run_csv_generator
 import run_model_noviz
+from virus_model.noviz import run_csv_generator
 
-
-parser = argparse.ArgumentParser(description='Runs multiple experiments using different configurations and generates a CSV file.')
+parser = argparse.ArgumentParser(
+    description='Runs multiple experiments using different configurations and generates a CSV file.')
 parser.add_argument('input_file', type=str, help="The file containing a set of experiment specifications.")
 
 args = parser.parse_args()

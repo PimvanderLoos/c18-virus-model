@@ -1,4 +1,4 @@
-from room_grid import *
+from virus_model.room_grid import *
 
 from typing import TYPE_CHECKING
 

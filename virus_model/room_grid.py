@@ -8,7 +8,7 @@ from mesa.space import MultiGrid, Coordinate
 from enum import Enum
 import numpy as np
 
-from util import *
+from virus_model.util import *
 
 SNUG_FIT_BUFFER = 5
 """
