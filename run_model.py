@@ -1,7 +1,7 @@
 from mesa.visualization.modules import ChartModule
 
 from virus_model.modular_server import CustomModularServer
-from virus_model.model import VirusModel, time_element, model_params, create_canvas_room_grid
+from virus_model.model import VirusModel, time_element, plot_title1, plot_title2, plot_title3, plot_title4, model_params, create_canvas_room_grid
 
 grid_canvas = create_canvas_room_grid()
 chart = ChartModule([{"Label": "infected",
@@ -45,7 +45,7 @@ chart_testing = ChartModule([{"Label": "tested total",
 
 model_params['grid_canvas'] = grid_canvas
 server = CustomModularServer(VirusModel,
-                             [time_element, grid_canvas, chart, chart_disease_state, chart_quarantined, chart_testing],
+                             [time_element, grid_canvas, plot_title1, chart, plot_title2, chart_disease_state, plot_title3, chart_quarantined, plot_title4, chart_testing],
                              "Virus Model", model_params)
 
 server.port = 8545
