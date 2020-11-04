@@ -609,28 +609,28 @@ class PlotTitle1(TextElement):
         super().__init__()
         
     def render(self, model: VirusModel) -> str:
-        return "<b>Total infections, deaths and quarantined</b>"
+        return "<br><b>Total infections, deaths and quarantined</b>"
         
 class PlotTitle2(TextElement):
     def __init__(self):
         super().__init__()
         
     def render(self, model: VirusModel) -> str:
-        return "<b>Progression of disease states</b>"
+        return "<br><b>Progression of disease states</b>"
     
 class PlotTitle3(TextElement):
     def __init__(self):
         super().__init__()
         
     def render(self, model: VirusModel) -> str:
-        return "<b>Progression of quarantined agents</b>"
+        return "<br><b>Progression of quarantined agents</b>"
 
 class PlotTitle4(TextElement):
     def __init__(self):
         super().__init__()
         
     def render(self, model: VirusModel) -> str:
-        return "<b>Performed tests</b>"
+        return "<br><b>Performed tests</b>"
 
 time_element = TimeElement()
 plot_title1 = PlotTitle1()
@@ -662,7 +662,12 @@ model_params = {
                                          value="This simulation model represents a university building in "
                                                "which agents (students) attend lectures in classrooms. It "
                                                "simulates the spread of a virus in the building. The plots "
-                                               "below the main visualization show the spread of the virus. "),
+                                               "below the main visualization show the spread of the virus. "
+                                               "<br>The simulation allows for testing the situation without measures "
+                                               "and with contact tracing on, meaning that not only "
+                                               "positively tested agents but also contacts of those infected "
+                                               "agents will be put into quarantine (removed from the simulation). "
+                                               "<br>Please see the readme file and our report for more details."),
     "static_text": UserSettableParameter('static_text',
                                          value="The options below allow you to adjust the parameter settings. "
                                                "After setting the options to the desired values, "
