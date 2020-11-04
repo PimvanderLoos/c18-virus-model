@@ -604,8 +604,40 @@ class TimeElement(TextElement):
         else:
             return "Day: " + str(days) + ", Time: " + str(hours) + ":" + str(quarters)
 
+class PlotTitle1(TextElement):
+    def __init__(self):
+        super().__init__()
+        
+    def render(self, model: VirusModel) -> str:
+        return "<b>Total infections, deaths and quarantined</b>"
+        
+class PlotTitle2(TextElement):
+    def __init__(self):
+        super().__init__()
+        
+    def render(self, model: VirusModel) -> str:
+        return "<b>Progression of disease states</b>"
+    
+class PlotTitle3(TextElement):
+    def __init__(self):
+        super().__init__()
+        
+    def render(self, model: VirusModel) -> str:
+        return "<b>Progression of quarantined agents</b>"
+
+class PlotTitle4(TextElement):
+    def __init__(self):
+        super().__init__()
+        
+    def render(self, model: VirusModel) -> str:
+        return "<b>Performed tests</b>"
 
 time_element = TimeElement()
+plot_title1 = PlotTitle1()
+plot_title2 = PlotTitle2()
+plot_title3 = PlotTitle3()
+plot_title4 = PlotTitle4()
+
 
 DEFAULT_GRID_WIDTH = 100
 DEFAULT_GRID_HEIGHT = 100
