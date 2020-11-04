@@ -1,0 +1,74 @@
+# These are just random examples to show how this works.
+# Empty lines and lines starting with '#' are ignored, everything else is treated as an experiment specification.
+
+# The first value is the name of the experiment (please don't use spaces). The name is used for two things:
+# 1) The name of the output directory for the given experiment.
+# 2) The reported name in the generated CSV file if/when that is generated.
+
+# Used for generating the ouput.csv for the results used in the results.ipynb:
+Tracing0_0  --participationTracing 0
+Tracing0_1  --participationTracing 0
+Tracing0_2  --participationTracing 0
+Tracing0_3  --participationTracing 0
+Tracing0_4  --participationTracing 0
+Tracing0_5  --participationTracing 0
+Tracing0_6  --participationTracing 0
+Tracing0_7  --participationTracing 0
+Tracing0_8  --participationTracing 0
+Tracing0_9  --participationTracing 0
+
+Tracing20_0 --mitigation contact_tracing --participationTracing 20
+Tracing20_1 --mitigation contact_tracing --participationTracing 20
+Tracing20_2 --mitigation contact_tracing --participationTracing 20
+Tracing20_3 --mitigation contact_tracing --participationTracing 20
+Tracing20_4 --mitigation contact_tracing --participationTracing 20
+Tracing20_5 --mitigation contact_tracing --participationTracing 20
+Tracing20_6 --mitigation contact_tracing --participationTracing 20
+Tracing20_7 --mitigation contact_tracing --participationTracing 20
+Tracing20_8 --mitigation contact_tracing --participationTracing 20
+Tracing20_9 --mitigation contact_tracing --participationTracing 20
+
+Tracing40_0 --mitigation contact_tracing --participationTracing 40
+Tracing40_1 --mitigation contact_tracing --participationTracing 40
+Tracing40_2 --mitigation contact_tracing --participationTracing 40
+Tracing40_3 --mitigation contact_tracing --participationTracing 40
+Tracing40_4 --mitigation contact_tracing --participationTracing 40
+Tracing40_5 --mitigation contact_tracing --participationTracing 40
+Tracing40_6 --mitigation contact_tracing --participationTracing 40
+Tracing40_7 --mitigation contact_tracing --participationTracing 40
+Tracing40_8 --mitigation contact_tracing --participationTracing 40
+Tracing40_9 --mitigation contact_tracing --participationTracing 40
+
+Tracing60_0 --mitigation contact_tracing --participationTracing 60
+Tracing60_1 --mitigation contact_tracing --participationTracing 60
+Tracing60_2 --mitigation contact_tracing --participationTracing 60
+Tracing60_3 --mitigation contact_tracing --participationTracing 60
+Tracing60_4 --mitigation contact_tracing --participationTracing 60
+Tracing60_5 --mitigation contact_tracing --participationTracing 60
+Tracing60_6 --mitigation contact_tracing --participationTracing 60
+Tracing60_7 --mitigation contact_tracing --participationTracing 60
+Tracing60_8 --mitigation contact_tracing --participationTracing 60
+Tracing60_9 --mitigation contact_tracing --participationTracing 60
+
+Tracing80_0 --mitigation contact_tracing --participationTracing 80
+Tracing80_1 --mitigation contact_tracing --participationTracing 80
+Tracing80_2 --mitigation contact_tracing --participationTracing 80
+Tracing80_3 --mitigation contact_tracing --participationTracing 80
+Tracing80_4 --mitigation contact_tracing --participationTracing 80
+Tracing80_5 --mitigation contact_tracing --participationTracing 80
+Tracing80_6 --mitigation contact_tracing --participationTracing 80
+Tracing80_7 --mitigation contact_tracing --participationTracing 80
+Tracing80_8 --mitigation contact_tracing --participationTracing 80
+Tracing80_9 --mitigation contact_tracing --participationTracing 80
+
+Tracing100_0 --mitigation contact_tracing --participationTracing 100
+Tracing100_1 --mitigation contact_tracing --participationTracing 100
+Tracing100_2 --mitigation contact_tracing --participationTracing 100
+Tracing100_3 --mitigation contact_tracing --participationTracing 100
+Tracing100_4 --mitigation contact_tracing --participationTracing 100
+Tracing100_5 --mitigation contact_tracing --participationTracing 100
+Tracing100_6 --mitigation contact_tracing --participationTracing 100
+Tracing100_7 --mitigation contact_tracing --participationTracing 100
+Tracing100_8 --mitigation contact_tracing --participationTracing 100
+Tracing100_9 --mitigation contact_tracing --participationTracing 100
+
