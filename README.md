@@ -74,3 +74,4 @@ If `--write-plots` was specified, 4 plots will be generated to visualize the res
 <img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_quarantine.png?token=AAXYNY2FYK5VJIHOHVPG57C7VJ7J6" width="45%"></img> 
 <img src="https://raw.githubusercontent.com/PimvanderLoos/c18-virus-model/master/screenshots/noviz_plot_testing.png?token=AAXYNY37IOVPXMD4ZI3YHS27VJ7KA" width="45%"></img>
 
+An application of generating results to investigate the effect of the participation rate in contact tracing on the statistics can be found in the folder `results`.
